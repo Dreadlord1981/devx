@@ -1,0 +1,27 @@
+.layout-hbox {
+	display: flex;
+	gap: 5px;
+	overflow: hidden;
+}
+
+.layout-vbox {
+	display: flex;
+	gap: 5px;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+.layout-fit {
+	display: flex;
+	overflow: hidden;
+}
+
+.flex {
+	flex: 1
+}
+.overflow-auto {
+	overflow: auto;
+}
+.maring-right-20 {
+	margin-right: 20px;
+}

@@ -1,0 +1,26 @@
+.output {
+	margin-top: 10px;
+	background-color: black;
+	color: #6facf1;
+	border: 1px solid #515457;
+	font-weight: bold;
+	flex-grow: 1;
+	padding: 10px;
+	text-align: initial;
+	overflow: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+
+	.output {
+		margin-top: 10px;
+		background-color: black;
+		color: #BC6FF1;
+		border: 1px solid #515457;
+		font-weight: bold;
+		flex-grow: 1;
+		padding: 10px;
+		text-align: initial;
+		overflow: auto;
+	}
+}

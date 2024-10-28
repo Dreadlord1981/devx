@@ -1,0 +1,81 @@
+button {
+	background-color: #fcfcfc;
+	border: 1px solid #a8a8a8;
+	outline: none;
+	padding: 10px;
+	color: #000;
+	cursor: pointer;
+	border-radius: 3px;
+	margin-right: 10px;
+}
+
+button:hover:enabled {
+	color: #ffffff;
+	background-color: #6facf1;
+}
+
+button:active:enabled {
+	color: #ffffff;
+	background-color: #6facf1;
+}
+
+button:focus:enabled {
+	color: #ffffff;
+	background-color: #6facf1;
+}
+button:disabled {
+	opacity: 0.45;
+	cursor: default;
+}
+
+.primary {
+	background-color: #000000;
+	color: #ffffff;
+	margin-right: 0px;
+}
+
+.primary:active {
+	border: 1px solid #6facf1;
+	border-color: #6facf1;
+}
+
+@media (prefers-color-scheme: dark) {
+	button {
+		background-color: #202020;
+		border: 1px solid #515457;
+		padding: 10px;
+		color: #fff;
+		border: none;
+		cursor: pointer;
+		border-radius: 3px;
+		margin-right: 10px;
+	}
+
+	button:hover {
+		background-color: #313131;
+		color: #000000;
+	}
+
+	button:hover {
+		background-color: #52057B;
+		color: #ffffff;
+	}
+	
+	button:active {
+		background-color: #BC6FF1;
+	}
+	
+	button:focus {
+		background-color: #BC6FF1;
+	}
+	
+	.primary {
+		background-color: #52057B;
+		margin-right: 0px;
+	}
+	
+	.primary:hover {
+		background-color: #BC6FF1;
+	}
+}
+  
