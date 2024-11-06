@@ -95,6 +95,10 @@ function App() {
 		{
 			value: "service",
 			label: "Service"
+		},
+		{
+			value: "header",
+			label: "Header"
 		}
 	]);
 

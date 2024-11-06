@@ -151,7 +151,7 @@ impl Handler for PackerArgs {
 
 					window.emit("theme-status", payload).unwrap();
 
-					last = out_buffer.clone();				
+					last.clone_from(&out_buffer);				
 				}
 				else if !out_buffer.is_empty() && out_buffer.ends_with('\n') {
 					update = true;
@@ -347,7 +347,7 @@ impl Handler for ExportArgs {
 			
 							window.emit("exporter-status", payload).unwrap();
 			
-							last = out_buffer.clone();				
+							last.clone_from(&out_buffer);				
 						}
 						else if out_buffer != "\n" {
 								update = true;
@@ -509,7 +509,7 @@ impl Handler for IcecBuilderArgs {
 
 					window.emit("icebuilder-status", payload).unwrap();
 
-					last = out_buffer.clone();				
+					last.clone_from(&out_buffer);				
 				}
 				else if out_buffer != "\n" {
 						update = true;
@@ -631,7 +631,7 @@ impl Handler for PackageBuilderArgs {
 
 					window.emit("icebuilder-status", payload).unwrap();
 
-					last = out_buffer.clone();				
+					last.clone_from(&out_buffer);				
 				}
 				else if out_buffer != "\n" {
 						update = true;
@@ -704,7 +704,7 @@ impl Handler for PackageBuilderArgs {
 
 					window.emit("icebuilder-status", payload).unwrap();
 
-					last = out_buffer.clone();				
+					last.clone_from(&out_buffer);				
 				}
 				else if out_buffer != "\n" {
 						update = true;
