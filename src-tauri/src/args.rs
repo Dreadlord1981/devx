@@ -411,7 +411,8 @@ pub struct IcecBuilderArgs {
 	pub deploy: String,
 	pub bin: String,
 	pub build_icecap: bool,
-	pub build_portfolio: bool
+	pub build_portfolio: bool,
+	pub release: bool
 }
 
 impl Handler for IcecBuilderArgs {
@@ -435,6 +436,10 @@ impl Handler for IcecBuilderArgs {
 		.arg("-d")
 		.arg(&self.deploy);
 
+		if self.release {
+			cmd.arg("-r");
+		}
+
 		cmd.stdout(Stdio::piped());
 
 		if cfg!(target_os = "windows") {
@@ -454,68 +459,80 @@ impl Handler for IcecBuilderArgs {
 	
 		loop {
 
-			let bytes = if let Ok(bytes) = out_reader.read(&mut vec_buf) {
-				bytes
+			let result = out_reader.read(&mut vec_buf);
+
+			if let Ok(bytes) = result {
+
+				if bytes == 0 {
+					break;
+				}
+	
+				if bytes > 0 {
+	
+					let slice = &vec_buf[..bytes];
+		
+					let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+	
+					if out_buffer.contains('\r') {
+						let temp: Vec<&str> = out_buffer.split('\r').collect();
+						out_buffer = temp.first().unwrap().to_string();
+					}
+	
+					let first_temp: Vec<u8> = vec![27];
+					let first_str = String::from_utf8(first_temp).unwrap();
+	
+					out_buffer = out_buffer.replace(&first_str, "");
+	
+					let second_temp: Vec<u8> = vec![91, 50, 65];
+					let second_str = String::from_utf8(second_temp).unwrap();
+	
+					out_buffer = out_buffer.replace(&second_str, "");
+	
+					let last_temp: Vec<u8> = vec![91, 74];
+					let last_str = String::from_utf8(last_temp).unwrap();
+	
+					out_buffer = out_buffer.replace(&last_str, "");
+	
+					if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+						out_buffer += "\n";
+					}
+					
+					if !out_buffer.is_empty() && out_buffer != last {
+			
+						std::thread::sleep(time::Duration::from_millis(10));
+	
+						let payload = Payload {
+							update,
+							error: false,
+							message: out_buffer.clone()
+						};
+	
+						update = false;
+	
+						window.emit("icebuilder-status", payload).unwrap();
+	
+						last.clone_from(&out_buffer);				
+					}
+					else if out_buffer != "\n" {
+							update = true;
+					}
+	
+					vec_buf = [0; 1024];
+				}
 			}
 			else {
-				0
-			};
-			
-			if bytes == 0 {
-				break;
-			}
 
-			if bytes > 0 {
+				let error = result.err().unwrap();
 
-				let slice = &vec_buf[..bytes];
-	
-				let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+				let payload = Payload {
+					update,
+					error: false,
+					message: format!("Error: {error}")
+				};
 
-				if out_buffer.contains('\r') {
-					let temp: Vec<&str> = out_buffer.split('\r').collect();
-					out_buffer = temp.first().unwrap().to_string();
-				}
+				update = false;
 
-				let first_temp: Vec<u8> = vec![27];
-				let first_str = String::from_utf8(first_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&first_str, "");
-
-				let second_temp: Vec<u8> = vec![91, 50, 65];
-				let second_str = String::from_utf8(second_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&second_str, "");
-
-				let last_temp: Vec<u8> = vec![91, 74];
-				let last_str = String::from_utf8(last_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&last_str, "");
-
-				if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
-					out_buffer += "\n";
-				}
-				
-				if !out_buffer.is_empty() && out_buffer != last {
-		
-					std::thread::sleep(time::Duration::from_millis(10));
-
-					let payload = Payload {
-						update,
-						error: false,
-						message: out_buffer.clone()
-					};
-
-					update = false;
-
-					window.emit("icebuilder-status", payload).unwrap();
-
-					last.clone_from(&out_buffer);				
-				}
-				else if out_buffer != "\n" {
-						update = true;
-				}
-
-				vec_buf = [0; 1024];
+				window.emit("icebuilder-status", payload).unwrap();
 			}
 		}
 	}
@@ -576,12 +593,7 @@ impl Handler for PackageBuilderArgs {
 	
 		loop {
 
-			let bytes = if let Ok(bytes) = out_reader.read(&mut vec_buf) {
-				bytes
-			}
-			else {
-				0
-			};
+			let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
 			
 			if bytes == 0 {
 				break;
@@ -649,12 +661,7 @@ impl Handler for PackageBuilderArgs {
 
 		loop {
 
-			let bytes = if let Ok(bytes) = err_reader.read(&mut vec_buf) {
-				bytes
-			}
-			else {
-				0
-			};
+			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
 			
 			if bytes == 0 {
 				break;
@@ -767,12 +774,7 @@ impl Handler for ThemeArgs {
 	
 		loop {
 
-			let bytes = if let Ok(bytes) = out_reader.read(&mut vec_buf) {
-				bytes
-			}
-			else {
-				0
-			};
+			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
 			
 			if bytes == 0 {
 				break;
@@ -840,12 +842,7 @@ impl Handler for ThemeArgs {
 
 		loop {
 
-			let bytes = if let Ok(bytes) = err_reader.read(&mut vec_buf) {
-				bytes
-			}
-			else {
-				0
-			};
+			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
 			
 			if bytes == 0 {
 				break;

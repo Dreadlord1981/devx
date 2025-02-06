@@ -148,17 +148,11 @@ pub async fn builder(
 
 	if args.build == "all" {
 
-		let mut header_build = args.clone();
-		let mut service_build = args.clone();
-		let mut release_build = args.clone();
+		let mut all_build = args.clone();
 
-		header_build.build = String::from("header");
-		service_build.build = String::from("service");
-		release_build.build = String::from("release");
+		all_build.build = String::from("all");
 
-		run(header_build, &window);
-		run(service_build, &window);
-		run(release_build, &window);
+		run(all_build, &window);
 	}
 	else {
 		run(args, &window);

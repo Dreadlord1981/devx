@@ -55,7 +55,8 @@ function App() {
 		deploy: "CAPQA",
 		bin: "CAPDEV",
 		build_icecap: false,
-		build_portfolio: false
+		build_portfolio: false,
+		release: false
 	});
 
 	let [statePackage, setStatePackage] = useState({
@@ -87,18 +88,6 @@ function App() {
 		{
 			value: "all",
 			label: "All"
-		},
-		{
-			value: "release",
-			label: "Release"
-		},
-		{
-			value: "service",
-			label: "Service"
-		},
-		{
-			value: "header",
-			label: "Header"
 		}
 	]);
 
@@ -177,7 +166,7 @@ function App() {
 	function onBuilderInputChange(i_event) {
 		
 		var i_target = i_event.target;
-		var value = i_target.value;
+		var value = i_target.type == "checkbox" ? i_target.checked : i_target.value;
 
 		let o_copy = {...builder};
 

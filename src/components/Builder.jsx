@@ -149,7 +149,7 @@ function Builder(props) {
 								<input className="field-input" onChange={props.onInputChange} value={state.password} type="password" name="password"></input>
 							</div>
 							<div className="field-wrapper">
-								<label className="field-label" htmlFor="password">IFS:</label>
+								<label className="field-label" htmlFor="ifs">IFS:</label>
 								<input className="field-input" onChange={props.onInputChange} value={state.ifs} name="ifs"></input>
 							</div>
 							<div className="field-wrapper">
@@ -159,6 +159,10 @@ function Builder(props) {
 							<div className="field-wrapper">
 								<label className="field-label" htmlFor="bin">Bin library:</label>
 								<input className="field-input" onChange={props.onInputChange} value={state.bin} name="bin"></input>
+							</div>
+							<div className="field-wrapper">
+								<label className="field-label" htmlFor="release">Release:</label>
+								<input type="checkbox" onChange={props.onInputChange} checked={state.release} className="field-input" name="release"></input>
 							</div>
 						</fieldset>
 					</form>
