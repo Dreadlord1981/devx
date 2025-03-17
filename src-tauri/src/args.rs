@@ -1,6 +1,6 @@
 use std::{io::{BufRead, BufReader, Read}, os::windows::process::CommandExt, path::PathBuf, process::{Command, Stdio}, time};
 use serde::{Deserialize, Serialize};
-use tauri::Window;
+use tauri::{Manager, Window};
 
 use crate::message::Payload;
 
@@ -26,8 +26,17 @@ pub struct PackerArgs {
 
 impl Handler for PackerArgs {
 	fn run(&self, window: &Window) {
+
+		let app = window.app_handle();
+
+		let path = app
+		.path_resolver()
+		.resolve_resource("bin")
+		.expect("Could not find directory");
+
+		let cmd_path = path.join("theme-executor.exe");
 		
-		let mut cmd = Command::new("theme-executor.exe");
+		let mut cmd = Command::new(cmd_path);
 	
 		cmd.arg("-t")
 			.arg(&self.theme);
@@ -215,7 +224,16 @@ impl Handler for ExportArgs {
 	
 	fn run(&self, window: &Window) {
 
-		let mut cmd = Command::new("repo-executor.exe");
+		let app = window.app_handle();
+
+		let path = app
+		.path_resolver()
+		.resolve_resource("bin")
+		.expect("Could not find directory");
+
+		let cmd_path = path.join("repo-executor.exe");
+
+		let mut cmd = Command::new(cmd_path);
 
 		let mut repo_path = PathBuf::from(shellexpand::full(&self.path).unwrap().to_string());
 
@@ -417,8 +435,17 @@ pub struct IcecBuilderArgs {
 
 impl Handler for IcecBuilderArgs {
 	fn run(&self, window: &Window) {
+
+		let app = window.app_handle();
+
+		let path = app
+		.path_resolver()
+		.resolve_resource("bin")
+		.expect("Could not find directory");
+
+		let cmd_path = path.join("icebuilder.exe");
 		
-		let mut cmd = Command::new("icebuilder.exe");
+		let mut cmd = Command::new(cmd_path);
 
 		cmd
 		.arg("-h")
@@ -553,8 +580,17 @@ pub struct PackageBuilderArgs {
 
 impl Handler for PackageBuilderArgs {
 	fn run(&self, window: &Window) {
+
+		let app = window.app_handle();
+
+		let path = app
+		.path_resolver()
+		.resolve_resource("bin")
+		.expect("Could not find directory");
+
+		let cmd_path = path.join("icebuilder.exe");
 		
-		let mut cmd = Command::new("icebuilder.exe");
+		let mut cmd = Command::new(cmd_path);
 
 		cmd
 		.arg("-h")
