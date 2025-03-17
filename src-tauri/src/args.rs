@@ -215,7 +215,7 @@ impl Handler for ExportArgs {
 	
 	fn run(&self, window: &Window) {
 
-		let mut cmd = Command::new("repo-exporter.exe");
+		let mut cmd = Command::new("repo-executor.exe");
 
 		let mut repo_path = PathBuf::from(shellexpand::full(&self.path).unwrap().to_string());
 
