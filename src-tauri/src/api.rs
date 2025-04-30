@@ -2,7 +2,7 @@ use std::{path::PathBuf, fs};
 
 use tauri::{Runtime, Window};
 
-use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ThemeArgs}, message::{Package, Payload}};
+use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload}};
 
 #[tauri::command]
 pub async fn packer(
@@ -178,6 +178,19 @@ pub async fn package(
 		error: false,
 		message: "Done".to_string()
 	}).unwrap();
+}
+
+#[tauri::command]
+pub async fn sysmin(
+    window: Window,
+    args: SysminArgs
+) {
+    run(args, &window);
+    window.emit("sysmin-done", Payload {
+        update: false,
+        error: false,
+        message: "Done".to_string()
+    }).unwrap();
 }
 
 #[tauri::command]
