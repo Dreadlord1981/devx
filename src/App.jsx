@@ -12,6 +12,7 @@ import "./styles/toolbar.css";
 import "./styles/output.css";
 import { useState } from "react";
 import Package from "./components/Package";
+import Sysmin from "./components/Sysmin";
 
 function App() {
 
@@ -90,6 +91,10 @@ function App() {
 			label: "All"
 		}
 	]);
+
+	let [stateSysmin, setStateSysmin] = useState({
+		system: "i"
+	});
 
 	function onCheckChange(i_event) {
 		
@@ -187,6 +192,20 @@ function App() {
 		o_copy[i_target.name] = value;
 
 		setStatePackage(params => ({
+			...o_copy
+		}));
+	};
+
+	function onSysminInputChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.value;
+
+		let o_copy = {...stateSysmin};
+
+		o_copy[i_target.name] = value;
+
+		setStateSysmin(params => ({
 			...o_copy
 		}));
 	};
@@ -336,6 +355,7 @@ function App() {
 				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onCheckChange={onCreatorCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} /> } />
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
 				<Route path="/package" element={ <Package state={statePackage} onInputChange={onPackageInputChange} /> } />
+				<Route path="/sysmin" element={ <Sysmin state={stateSysmin} onInputChange={onSysminInputChange} /> } />
 			</Routes>
 		</BrowserRouter>
 		

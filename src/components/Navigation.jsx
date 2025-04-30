@@ -49,6 +49,11 @@ function Navigation(props) {
 			text: "P",
 			id: "package",
 			link: "/package"
+		},
+		{
+			text: "S",
+			id: "sysmin",
+			link: "/sysmin"
 		}
 	]
 

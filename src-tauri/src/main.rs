@@ -17,7 +17,8 @@ fn main() {
 				update_title,
 				builder,
 				package,
-				create_theme
+				create_theme,
+				sysmin
 			]
 		)
 		.run(tauri::generate_context!())
