@@ -1178,7 +1178,7 @@ impl Handler for ServerArgs {
 			let w = tauri::WindowBuilder::new(
 				&app,
 				&label,
-				tauri::WindowUrl::App("server.html".parse().unwrap())
+				tauri::WindowUrl::App("servers/server.html".parse().unwrap())
 			)
 			.title(format!("Server: {server}-{config}"))
 			.inner_size(1024., 800.0)
