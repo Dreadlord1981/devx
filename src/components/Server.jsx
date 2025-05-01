@@ -83,7 +83,7 @@ function Server(props) {
 
 	useEffect(function() {
 
-		let i_promise = invoke("update_title", {title: "Capdev builder"});
+		let i_promise = invoke("update_title", {title: "Capdev Run server"});
 
 		if (inputRef) {
 			inputRef.current.focus();
