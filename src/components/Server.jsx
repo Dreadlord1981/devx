@@ -144,7 +144,7 @@ function Server(props) {
 							</div>
 						</fieldset>
 						{servers.length > 0 &&
-							<fieldset disabled={working} className="overflow-auto">
+							<fieldset disabled={working} className="overflow-auto max-height">
 								<legend>Servers</legend>
 								{
 									servers.map(function(o_config) {

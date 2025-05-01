@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufReader, Read}, os::windows::process::CommandExt, path::PathBuf, process::{Command, Stdio}, time};
+use std::{io::{BufRead, BufReader, Read}, os::windows::process::CommandExt, path::PathBuf, process::{Command, Stdio}, sync::Mutex, time};
 use serde::{Deserialize, Serialize};
 use tauri::{Manager, Window};
 
@@ -6,6 +6,11 @@ use crate::message::Payload;
 
 pub trait Handler {
 	fn run(&self, window: &Window);
+}
+
+
+pub struct AppState {
+	pub children: Mutex<Vec<u32>>
 }
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -810,7 +815,7 @@ impl Handler for ThemeArgs {
 	
 		loop {
 
-			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+			let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
 			
 			if bytes == 0 {
 				break;
@@ -1127,6 +1132,10 @@ pub struct ServerArgs {
 
 impl Handler for ServerArgs {
 	fn run(&self, window: &Window) {
+		
+		let state = window.state::<AppState>();
+
+		let mut list = state.children.lock().unwrap();
 
 		let server_base = shellexpand::full(&self.path).unwrap().to_string();
 
@@ -1161,6 +1170,10 @@ impl Handler for ServerArgs {
 		cmd.stderr(Stdio::piped());
 
 		let mut child = cmd.spawn().unwrap();
+
+		list.push(child.id());
+
+		drop(list);
 	
 		let stdout = child.stdout.take().unwrap();
 		let stderr = child.stderr.take().unwrap();
