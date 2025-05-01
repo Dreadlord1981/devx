@@ -13,6 +13,7 @@ import "./styles/output.css";
 import { useState } from "react";
 import Package from "./components/Package";
 import Sysmin from "./components/Sysmin";
+import Server from "./components/Server";
 
 function App() {
 
@@ -94,6 +95,14 @@ function App() {
 
 	let [stateSysmin, setStateSysmin] = useState({
 		system: "i"
+	});
+
+	let [server, setServer] = useState({
+		server: "",
+		servers: [],
+		configs: [],
+		config: "",
+		path: "$POPATH/../",
 	});
 
 	function onCheckChange(i_event) {
@@ -313,6 +322,58 @@ function App() {
 		}));
 	}
 
+	async function onServerPathChange(i_event) {
+
+		var i_target = i_event.target;
+		var value = i_target.value;
+
+		let o_copy = {...server};
+
+		o_copy[i_target.name] = value;
+
+		let a_servers = await invoke("get_server_list", {path: value});
+
+		o_copy.servers = a_servers;
+
+		setServer(params => ({
+			...o_copy
+		}));
+	}
+
+	async function onServerChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.name;
+
+		let o_copy = {...server};
+
+		o_copy.server = value;
+
+		let a_configs = await invoke("get_server_configs", {path: o_copy.path, server: value});
+
+		o_copy.configs = a_configs;
+
+		setServer(params => ({
+			...o_copy
+		}));
+
+	}
+
+	async function onConfigChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.name;
+
+		let o_copy = {...server};
+
+		o_copy.config = value;
+
+		setServer(params => ({
+			...o_copy
+		}));
+
+	}
+
 	function onPackageChange(i_event) {
 		
 		var i_target = i_event.target;
@@ -356,6 +417,7 @@ function App() {
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
 				<Route path="/package" element={ <Package state={statePackage} onInputChange={onPackageInputChange} /> } />
 				<Route path="/sysmin" element={ <Sysmin state={stateSysmin} onInputChange={onSysminInputChange} /> } />
+				<Route path="/server" element={ <Server state={server} onInputChange={onServerPathChange} onServerChange={onServerChange} onConfigChange={onConfigChange} /> } />
 			</Routes>
 		</BrowserRouter>
 		

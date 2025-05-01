@@ -1118,6 +1118,193 @@ impl Handler for SysminArgs {
 	}
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ServerArgs {
+	pub path: String,
+	pub server: String,
+	pub config: String
+}
+
+impl Handler for ServerArgs {
+	fn run(&self, window: &Window) {
+
+		let server_base = shellexpand::full(&self.path).unwrap().to_string();
+
+		let server_base = server_base.trim();
+
+		let mut server_base_path = PathBuf::from(server_base);
+
+		server_base_path.push(&self.server);
+
+		let app = window.app_handle();
+
+		let path = app
+		.path_resolver()
+		.resolve_resource("bin")
+		.expect("Could not find directory");
+
+		let cmd_path = path.join("goserver.exe");
+		
+		let mut cmd = Command::new(cmd_path);
+
+		cmd
+			.arg("-f")
+			.arg(&server_base_path)
+			.arg("-s")
+			.arg(&self.config);
+
+		if cfg!(target_os = "windows") {
+			cmd.creation_flags(0x08000000);
+		}
+
+		cmd.stdout(Stdio::piped());
+		cmd.stderr(Stdio::piped());
+
+		let mut child = cmd.spawn().unwrap();
+	
+		let stdout = child.stdout.take().unwrap();
+		let stderr = child.stderr.take().unwrap();
+		
+		let mut out_reader = BufReader::new(stdout);
+		let mut err_reader = BufReader::new(stderr);
+	
+		let mut vec_buf = [0; 1024];
+	
+		let mut last = "".to_string();
+		let mut update = false;
+	
+		loop {
+
+			let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
+			
+			if bytes == 0 {
+				break;
+			}
+
+			if bytes > 0 {
+
+				let slice = &vec_buf[..bytes];
+	
+				let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+				if out_buffer.contains('\r') {
+					let temp: Vec<&str> = out_buffer.split('\r').collect();
+					out_buffer = temp.first().unwrap().to_string();
+				}
+
+				let first_temp: Vec<u8> = vec![27];
+				let first_str = String::from_utf8(first_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&first_str, "");
+
+				let second_temp: Vec<u8> = vec![91, 50, 65];
+				let second_str = String::from_utf8(second_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&second_str, "");
+
+				let last_temp: Vec<u8> = vec![91, 74];
+				let last_str = String::from_utf8(last_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&last_str, "");
+
+				if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+					out_buffer += "\n";
+				}
+				
+				if !out_buffer.is_empty() && out_buffer != last {
+		
+					std::thread::sleep(time::Duration::from_millis(10));
+
+					let payload = Payload {
+						update,
+						error: false,
+						message: out_buffer.clone()
+					};
+
+					update = false;
+
+					window.emit("server-status", payload).unwrap();
+
+					last.clone_from(&out_buffer);				
+				}
+				else if out_buffer != "\n" {
+						update = true;
+				}
+
+				vec_buf = [0; 1024];
+			}
+		}
+		
+		vec_buf = [0; 1024];
+
+		
+		last = "".to_string();
+		update = false;
+
+		loop {
+
+			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+			
+			if bytes == 0 {
+				break;
+			}
+
+			if bytes > 0 {
+
+				let slice = &vec_buf[..bytes];
+	
+				let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+				if out_buffer.contains('\r') {
+					let temp: Vec<&str> = out_buffer.split('\r').collect();
+					out_buffer = temp.first().unwrap().to_string();
+				}
+
+				let first_temp: Vec<u8> = vec![27];
+				let first_str = String::from_utf8(first_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&first_str, "");
+
+				let second_temp: Vec<u8> = vec![91, 50, 65];
+				let second_str = String::from_utf8(second_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&second_str, "");
+
+				let last_temp: Vec<u8> = vec![91, 74];
+				let last_str = String::from_utf8(last_temp).unwrap();
+
+				out_buffer = out_buffer.replace(&last_str, "");
+
+				if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+					out_buffer += "\n";
+				}
+				
+				if !out_buffer.is_empty() && out_buffer != last {
+		
+					std::thread::sleep(time::Duration::from_millis(10));
+
+					let payload = Payload {
+						update,
+						error: false,
+						message: out_buffer.clone()
+					};
+
+					update = false;
+
+					window.emit("server-status", payload).unwrap();
+
+					last.clone_from(&out_buffer);				
+				}
+				else if out_buffer != "\n" {
+						update = true;
+				}
+
+				vec_buf = [0; 1024];
+			}
+		}
+	}
+}
+
 pub fn run<T>(args: T, window: &Window) 
 where T: Handler{
 	args.run(window);

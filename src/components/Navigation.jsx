@@ -54,6 +54,12 @@ function Navigation(props) {
 			text: "S",
 			id: "sysmin",
 			link: "/sysmin"
+		},
+		,
+		{
+			text: "G",
+			id: "server",
+			link: "/server"
 		}
 	]
 
@@ -78,6 +84,12 @@ function Navigation(props) {
 				}
 				else if (i_event.key == "p") {
 					history("/package");
+				}
+				else if (i_event.key == "s") {
+					history("/sysmin");
+				}
+				else if (i_event.key == "g") {
+					history("/server");
 				}
 			}
 		};

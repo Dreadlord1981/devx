@@ -1,8 +1,10 @@
-use std::{path::PathBuf, fs};
+use std::{fs::{self, OpenOptions}, io::Read, path::PathBuf};
 
+use serde::de::value;
+use serde_json::Value;
 use tauri::{Runtime, Window};
 
-use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload}};
+use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ServerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload}};
 
 #[tauri::command]
 pub async fn packer(
@@ -194,6 +196,19 @@ pub async fn sysmin(
 }
 
 #[tauri::command]
+pub async fn run_server(
+    window: Window,
+    args: ServerArgs
+) {
+    run(args, &window);
+    window.emit("server-done", Payload {
+        update: false,
+        error: false,
+        message: "Done".to_string()
+    }).unwrap();
+}
+
+#[tauri::command]
 pub async fn create_theme(
 	window: Window,
 	args: ThemeArgs
@@ -216,4 +231,91 @@ pub async fn update_title<R: Runtime> (
 ) -> Result<(), String> {
 	window.set_title(&title).unwrap();
   Ok(())
+}
+
+#[tauri::command]
+pub async fn get_server_list(
+	path: String
+) -> Vec<Package> {
+
+	let server_base = shellexpand::full(&path).unwrap().to_string();
+
+	let server_base = server_base.trim();
+
+	let server_base_path = PathBuf::from(server_base);
+
+	let mut server_list: Vec<Package> = vec![];
+
+	let fs_result = fs::read_dir(server_base);
+
+	if let Ok(result_list) = fs_result {
+
+		for dir_entry in result_list.flatten() {
+
+			let meta_data = dir_entry.metadata().unwrap();
+
+			if meta_data.is_dir() {
+
+				let mut server_dir = server_base_path.clone();
+				server_dir.push(dir_entry.file_name());
+				server_dir.push("go.json");
+
+				if server_dir.exists() {
+
+					server_list.push(Package{
+						name: dir_entry.file_name().to_string_lossy().to_string()
+					});
+				}
+			}
+		}
+	}
+	
+	server_list.sort();
+
+	server_list
+}
+
+#[tauri::command]
+pub async fn get_server_configs(
+	path: String,
+	server: String
+) -> Vec<Package> {
+
+	let server_base = shellexpand::full(&path).unwrap().to_string();
+
+	let server_base = server_base.trim();
+
+	let mut server_base_path = PathBuf::from(server_base);
+
+	server_base_path.push(server);
+
+	server_base_path.push("go.json");
+
+	let mut server_list: Vec<Package> = vec![];
+
+	if server_base_path.exists() {
+
+		let mut data = String::from("");
+		let mut file = OpenOptions::new().read(true).open(server_base_path).unwrap();
+		file.read_to_string(&mut data).unwrap();
+
+		let value: Value = serde_json::from_str(&data).unwrap();
+		let list: Vec<Value> = serde_json::from_value(value["servers"].clone()).unwrap();
+
+		for server in list.iter() {
+
+			let name_value = &server["name"];
+			let mut name = name_value.to_string();
+			name = name.replace('"', "");
+
+			server_list.push(Package{
+				name
+			});
+		}
+
+	}
+	
+	server_list.sort();
+
+	server_list
 }

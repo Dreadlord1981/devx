@@ -18,7 +18,10 @@ fn main() {
 				builder,
 				package,
 				create_theme,
-				sysmin
+				sysmin,
+				get_server_list,
+				get_server_configs,
+				run_server
 			]
 		)
 		.run(tauri::generate_context!())
