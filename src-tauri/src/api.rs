@@ -199,11 +199,14 @@ pub async fn run_server(
     window: Window,
     args: ServerArgs
 ) {
+	let server = args.server.clone();
+	let server_config = args.config.clone();
+
     run(args, &window);
     window.emit("server-done", Payload {
         update: false,
         error: false,
-        message: "Done".to_string()
+        message: format!("Server started: {server} - {server_config}\n")
     }).unwrap();
 }
 

@@ -1,0 +1,61 @@
+:root {
+	font-family: Open Sans, sans-serif;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 400;
+
+	color: #000;
+	background-color: #d3d3d3;
+
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	-webkit-text-size-adjust: 100%;
+}
+html, body {
+	display: flex;
+	width: 100vw;
+	height: 100vh;
+	margin: 0;
+	padding: 0;
+}
+
+.main {
+	display: flex;
+	flex: 1;
+	overflow: hidden;
+}
+.container {
+	position: relative;
+	flex: 1;
+	padding: 10px;
+	margin: 10px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	overflow: hidden;
+	background: rgb(255, 255, 255, 0.1);
+    backdrop-filter: blur(1rem);
+	box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
+	border: 1px solid rgba(255,255,255,0.25);
+}
+
+.log {
+	margin-top: 10px;
+	background-color: black;
+	color: #6facf1;
+	border: 1px solid #515457;
+	font-weight: bold;
+	flex-grow: 1;
+	padding: 10px;
+	text-align: initial;
+	overflow: auto;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #ffffff;
+    background-color: #202020;
+  }
+}
