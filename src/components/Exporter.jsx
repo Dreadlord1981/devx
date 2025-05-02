@@ -144,7 +144,7 @@ function Exporter(props) {
 
 	return (
 		<>
-			<Navigation active={"exporter"}/>
+			<Navigation active={"exporter"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<div className="form flex">

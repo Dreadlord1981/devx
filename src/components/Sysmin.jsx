@@ -49,24 +49,32 @@ function Sysmin(props) {
     async function onClearClick() {
         setLog("");
     }
+
     useEffect(function() {
+
         let i_promise = invoke("update_title", {title: "System minifier"});
+
         let status = appWindow.listen("sysmin-status", function(i_response) {
             let o_payload = i_response.payload;
             updatestatus(o_payload);
         });
+
         let error = appWindow.listen("sysmin-error", function(i_response) {
             let o_payload = i_response.payload;
             updatestatus(o_payload, true);
         });
+
         let done = appWindow.listen("sysmin-done", function(i_response) {
             let o_payload = i_response.payload;
             updatestatus(o_payload, true);
         });
+
         const scrollHeight = logRef.current.scrollHeight;
         const height = logRef.current.clientHeight;
         const maxScrollTop = scrollHeight - height;
+
         logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+
         return () => {
             status.then(function(f_callback) {
                 f_callback();
@@ -78,6 +86,7 @@ function Sysmin(props) {
                 f_callback();
             });
         }
+
     }, [log])
 
     let portfolio = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system"></input>;
@@ -89,9 +98,10 @@ function Sysmin(props) {
     if (state.system == "p") {
         portfolio = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system" checked></input>
     }
+	
     return (
         <>
-            <Navigation active={"sysmin"}/>
+            <Navigation active={"sysmin"} working={working}/>
             <div className="container">
                 <div className="layout-hbox flex">
                     <form className="form flex">

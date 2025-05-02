@@ -137,7 +137,7 @@ function Package(props) {
 
 	return (
 		<>
-			<Navigation active={"package"}/>
+			<Navigation active={"package"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<form className="form flex">

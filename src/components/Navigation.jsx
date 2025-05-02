@@ -23,6 +23,7 @@ function Navigation(props) {
 	}
 
 	var s_active = props.active
+	var b_working = props.working;
 
 	var links = [
 		{
@@ -63,8 +64,18 @@ function Navigation(props) {
 		}
 	]
 
-	function isActive(value, s_active) {
-		return "menu-item" + (value == s_active ? " " + "selected" : "")
+	function isActive(value, s_active, b_working) {
+
+		let s_class = "menu-item" + (value == s_active ? " " + "selected" : "");
+
+		if (b_working) {
+			s_class = [
+				s_class,
+				"menu-item-disabled"
+			].join(" ")
+		}
+
+		return s_class;
 	}
 
 	useEffect(function() {
@@ -78,6 +89,9 @@ function Navigation(props) {
 				}
 				else if (i_event.key == "t") {
 					history("/theme");
+				}
+				else if (i_event.key == "c") {
+					history("/creator");
 				}
 				else if (i_event.key == "b") {
 					history("/builder");
@@ -109,7 +123,7 @@ function Navigation(props) {
 						const s_a_id = useId();
 						const s_li_id = useId();
 
-						return <li id={o_config.id} key={s_li_id} className={isActive(o_config.id, s_active)} onClick={onLinkClick} >{o_config.text}</li>;
+						return <li id={o_config.id} key={s_li_id} className={isActive(o_config.id, s_active, b_working)} onClick={onLinkClick} >{o_config.text}</li>;
 					})
 				}
 			</ul>

@@ -132,7 +132,7 @@ function Server(props) {
 
 	return (
 		<>
-			<Navigation active={"server"}/>
+			<Navigation active={"server"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<form className="form flex">

@@ -156,7 +156,7 @@ function Creatator(props) {
 
 	return (
 		<>
-			<Navigation active={"creator"}/>
+			<Navigation active={"creator"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<form className="form flex">

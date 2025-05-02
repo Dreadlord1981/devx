@@ -117,7 +117,7 @@ function Builder(props) {
 
 	return (
 		<>
-			<Navigation active={"builder"}/>
+			<Navigation active={"builder"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<form className="form flex">

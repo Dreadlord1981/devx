@@ -136,7 +136,7 @@ function Theme(props) {
 
 	return (
 		<>
-			<Navigation active={"theme"}/>
+			<Navigation active={"theme"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<form className="form flex">
