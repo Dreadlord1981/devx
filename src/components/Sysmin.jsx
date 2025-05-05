@@ -104,7 +104,7 @@ function Sysmin(props) {
             <Navigation active={"sysmin"} working={working}/>
             <div className="container">
                 <div className="layout-hbox flex">
-                    <form className="form flex">
+                    <div className="form flex">
                         <fieldset disabled={working}>
                             <legend>System</legend>
                             <div className="field-wrapper">
@@ -116,7 +116,7 @@ function Sysmin(props) {
                                 {portfolio}
                             </div>
                         </fieldset>
-                    </form>
+                    </div>
                     <div className="layout-fit flex">
                         <div className="output flex" ref={logRef}>
                             <pre>

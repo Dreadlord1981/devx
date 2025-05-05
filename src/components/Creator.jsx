@@ -159,7 +159,7 @@ function Creatator(props) {
 			<Navigation active={"creator"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
-					<form className="form flex">
+					<div className="form flex">
 						<fieldset disabled={working}>
 							<legend>Create theme</legend>
 							<div className="field-wrapper">
@@ -193,7 +193,7 @@ function Creatator(props) {
 								}
 							</fieldset>
 						}
-					</form>
+					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>
 							<pre>

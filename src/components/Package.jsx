@@ -140,7 +140,7 @@ function Package(props) {
 			<Navigation active={"package"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
-					<form className="form flex">
+					<div className="form flex">
 						<fieldset disabled={working}>
 							<legend>Sever</legend>
 							<div className="field-wrapper">
@@ -167,7 +167,7 @@ function Package(props) {
 								{portfolio}
 							</div>
 						</fieldset>
-					</form>
+					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>
 							<pre>

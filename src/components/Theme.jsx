@@ -139,7 +139,7 @@ function Theme(props) {
 			<Navigation active={"theme"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
-					<form className="form flex">
+					<div className="form flex">
 						<fieldset disabled={working}>
 							<legend>Info</legend>
 							<div className="field-wrapper">
@@ -206,7 +206,7 @@ function Theme(props) {
 								}
 							</fieldset>
 						}
-					</form>
+					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>
 							<pre>

@@ -120,7 +120,7 @@ function Builder(props) {
 			<Navigation active={"builder"} working={working}/>
 			<div className="container">
 				<div className="layout-hbox flex">
-					<form className="form flex">
+					<div className="form flex">
 						<fieldset disabled={working}>
 							<legend>Info</legend>
 							<div className="field-wrapper">
@@ -165,7 +165,7 @@ function Builder(props) {
 								<input type="checkbox" onChange={props.onInputChange} checked={state.release} className="field-input" name="release"></input>
 							</div>
 						</fieldset>
-					</form>
+					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>
 							<pre>
