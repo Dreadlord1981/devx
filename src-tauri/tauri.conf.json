@@ -47,12 +47,7 @@
       "shortDescription": "",
       "targets": [
 		"msi"
-	  ],
-      "windows": {
-        "certificateThumbprint": "62becc70f1a3c308e6b79f167b563c45a002c20d",
-        "digestAlgorithm": "sha256",
-        "timestampUrl": "http://timestamp.comodoca.com"
-      }
+	  ]
     },
     "security": {
       "csp": null,
