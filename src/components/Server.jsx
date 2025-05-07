@@ -11,6 +11,8 @@ function Server(props) {
 	let configs = state.configs;
 	let server = state.server;
 	let config = state.config;
+	let cache = state.cache;
+
 
 	const logRef = useRef(null);
 	const inputRef = useRef(null);
@@ -60,6 +62,11 @@ function Server(props) {
 
 	}
 
+	function isCacheSelected(b_value) {
+
+		return cache == b_value;
+	}
+
 	async function onClick() {
 
 		setLog("")
@@ -68,7 +75,12 @@ function Server(props) {
 		let o_args = {
 			path: state.path,
 			config: state.config,
-			server: state.server
+			port: state.port,
+			server: state.server,
+			https: state.https,
+			cache: state.cache
+
+
 		};
 
 		await invoke("run_server", {
@@ -162,13 +174,24 @@ function Server(props) {
 								{
 									configs.map(function(o_config) {
 										return <div key={o_config.name} className="field-wrapper">
-											<input type="checkbox" checked={isConfigSelected(o_config.name)} onChange={props.onConfigChange} className="field-input maring-right-20" name={o_config.name}></input>
+											<input type="checkbox" checked={isConfigSelected(o_config.name)} onChange={props.onConfigChange} className="field-input maring-right-20" name={o_config.name} port={o_config.port} mode={o_config.https ? 1 : 0}></input>
 											<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
 										</div>
 									})
 								}
 							</fieldset>
 						}
+						<fieldset disabled={working}>
+                            <legend>Caching</legend>
+                            <div className="field-wrapper">
+                                <label className="field-label" htmlFor="no-cache-input">No cache:</label>
+                                <input type="radio" checked={isCacheSelected(false)} className="field-input" onChange={props.onServerCacheChange} id="no-cache-input" value="0" name="cache"></input>
+                            </div>
+                            <div className="field-wrapper">
+                                <label className="field-label" htmlFor="cache-input">Cache:</label>
+                                <input type="radio" checked={isCacheSelected(true)} className="field-input" onChange={props.onServerCacheChange} id="cache-input" value="1" name="cache"></input>
+                            </div>
+                        </fieldset>
 					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>

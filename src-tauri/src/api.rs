@@ -3,7 +3,7 @@ use std::{fs::{self, OpenOptions}, io::Read, path::PathBuf};
 use serde_json::Value;
 use tauri::{Runtime, Window};
 
-use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ServerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload}};
+use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ServerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload, ServerPackage}};
 
 #[tauri::command]
 pub async fn packer(
@@ -201,12 +201,20 @@ pub async fn run_server(
 ) {
 	let server = args.server.clone();
 	let server_config = args.config.clone();
+	let server_port =  args.port.clone();
+	let server_https =args.https.clone();
+	
+	let url = if server_https {
+		format!("https://localhost:{server_port}")
+	} else {
+		format!("http://localhost:{server_port}")
+	};
 
     run(args, &window);
     window.emit("server-done", Payload {
         update: false,
         error: false,
-        message: format!("Server started: {server} - {server_config}\n")
+        message: format!("Server started: {server} - {server_config} at: {url}\n")
     }).unwrap();
 }
 
@@ -281,7 +289,7 @@ pub async fn get_server_list(
 pub async fn get_server_configs(
 	path: String,
 	server: String
-) -> Vec<Package> {
+) -> Vec<ServerPackage> {
 
 	let server_base = shellexpand::full(&path).unwrap().to_string();
 
@@ -293,7 +301,7 @@ pub async fn get_server_configs(
 
 	server_base_path.push("go.json");
 
-	let mut server_list: Vec<Package> = vec![];
+	let mut server_list: Vec<ServerPackage> = vec![];
 
 	if server_base_path.exists() {
 
@@ -310,8 +318,24 @@ pub async fn get_server_configs(
 			let mut name = name_value.to_string();
 			name = name.replace('"', "");
 
-			server_list.push(Package{
-				name
+			let port_value = &server["port"];
+			let mut port_str = port_value.to_string();
+			port_str = port_str.replace('"', "");
+
+			let port = port_str.parse::<i32>().unwrap();
+
+			let https_value = &server["https"];
+
+			let mut https = false;
+
+			if let Some(val) = https_value.as_bool() {
+				https = val;
+			}
+
+			server_list.push(ServerPackage{
+				name,
+				port,
+				https
 			});
 		}
 

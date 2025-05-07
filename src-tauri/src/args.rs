@@ -1128,7 +1128,10 @@ impl Handler for SysminArgs {
 pub struct ServerArgs {
 	pub path: String,
 	pub server: String,
-	pub config: String
+	pub config: String,
+	pub port: i32,
+	pub https: bool,
+	pub cache: bool
 }
 
 impl Handler for ServerArgs {
@@ -1144,7 +1147,9 @@ impl Handler for ServerArgs {
 
 		let server = self.server.clone();
 		let config = self.config.clone();
-
+		let port = self.port.clone();
+		let https = self.https.clone();	
+		
 		let app = window.app_handle();
 
 		let path = app
@@ -1165,6 +1170,9 @@ impl Handler for ServerArgs {
 		if cfg!(target_os = "windows") {
 			cmd.creation_flags(0x08000000);
 		}
+		if self.cache {
+			cmd.arg("-a");
+		} 
 
 		std::thread::spawn(move || {
 
@@ -1175,12 +1183,18 @@ impl Handler for ServerArgs {
 			let pid = child.id();
 			let label = format!("server-{}", &pid);
 
+			let url = if https {
+				format!("https://localhost: {port}")
+			} else {
+				format!("http://localhost: {port}")
+			};
+
 			let w = tauri::WindowBuilder::new(
 				&app,
 				&label,
 				tauri::WindowUrl::App("servers/server.html".parse().unwrap())
 			)
-			.title(format!("Server: {server}-{config}"))
+			.title(format!("Server: {server}-{config} at: {url}"))
 			.inner_size(1024., 800.0)
 			.build().unwrap();
 
@@ -1197,7 +1211,7 @@ impl Handler for ServerArgs {
 			let mut update = false;	
 
 			w.on_window_event(move |event| {
-
+				
 				if let tauri::WindowEvent::Destroyed = event {
 	
 					let sys = System::new_all();

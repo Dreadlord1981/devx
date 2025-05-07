@@ -102,6 +102,9 @@ function App() {
 		servers: [],
 		configs: [],
 		config: "",
+		port: 0,
+		https: false,
+		cache: false,
 		path: "$POPATH/../",
 	});
 
@@ -363,16 +366,22 @@ function App() {
 		
 		var i_target = i_event.target;
 		var value = i_target.name;
+		var port = parseInt(i_target.getAttribute("port"));
+		var https = Boolean.apply(null, [parseInt(i_target.getAttribute("mode"))])
 
 		let o_copy = {...server};
 
 		o_copy.config = value;
+		o_copy.port = port;
+		o_copy.https = https;
 
 		setServer(params => ({
 			...o_copy
 		}));
 
 	}
+
+	
 
 	function onPackageChange(i_event) {
 		
@@ -407,6 +416,20 @@ function App() {
 
 	}
 
+	function onServerCacheChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.value;
+
+		let o_copy = {...server};
+
+		o_copy.cache = Boolean.apply(null, [parseInt(value)]);
+
+		setServer(params => ({
+			...o_copy
+		}));
+	};
+
 	return (
 		<BrowserRouter>
 			<Routes>
@@ -417,7 +440,7 @@ function App() {
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
 				<Route path="/package" element={ <Package state={statePackage} onInputChange={onPackageInputChange} /> } />
 				<Route path="/sysmin" element={ <Sysmin state={stateSysmin} onInputChange={onSysminInputChange} /> } />
-				<Route path="/server" element={ <Server state={server} onInputChange={onServerPathChange} onServerChange={onServerChange} onConfigChange={onConfigChange} /> } />
+				<Route path="/server" element={ <Server state={server} onInputChange={onServerPathChange} onServerChange={onServerChange} onConfigChange={onConfigChange} onServerCacheChange={onServerCacheChange} /> } />
 			</Routes>
 		</BrowserRouter>
 		

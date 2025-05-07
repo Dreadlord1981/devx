@@ -11,3 +11,10 @@ pub struct Payload {
 pub struct Package {
 	pub name: String
 }
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, PartialOrd, Eq, Ord)]
+pub struct ServerPackage {
+	pub name: String,
+	pub port: i32,
+	pub https: bool
+}
