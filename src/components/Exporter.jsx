@@ -10,6 +10,7 @@ function Exporter(props) {
 	let f_first = props.onFirst;
 	let repoes = state.repoes;
 	let first = state.first;
+	let ftp = state.ftp;
 
 	const logRef = useRef(null);
 	const inputRef = useRef(null);
@@ -28,6 +29,11 @@ function Exporter(props) {
 		});
 
 		return b_found;
+	}
+
+	function isFtpSelected(b_value) {
+
+		return ftp == b_value;
 	}
 
 	function updatestatus(o_payload, b_done) {
@@ -185,10 +191,14 @@ function Exporter(props) {
 								<label className="field-label" htmlFor="export">Export:</label>
 								<input type="checkbox" onChange={props.onCheckChange} checked={state.export} className="field-input" name="export"></input>
 							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="pack">Npm pack:</label>
-								<input type="checkbox" onChange={props.onCheckChange} checked={state.pack} className="field-input" name="pack"></input>
-							</div>
+							 <div className="field-wrapper">
+                                <label className="field-label" htmlFor="ftp-input">FTP:</label>
+                                <input type="radio" checked={isFtpSelected(true)} className="field-input" onChange={props.onFtpChange} id="ftp-input" value="1" name="ftp"></input>
+                            </div>
+                            <div className="field-wrapper">
+                                <label className="field-label" htmlFor="ssh-input">SSH:</label>
+                                <input type="radio" checked={isFtpSelected(false)} className="field-input" onChange={props.onFtpChange} id="ssh-input" value="0" name="ftp"></input>
+                            </div>
 						</fieldset>
 						{repoes.length > 0 &&
 							<fieldset disabled={working} className="flex overflow-auto">

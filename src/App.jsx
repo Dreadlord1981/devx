@@ -30,7 +30,8 @@ function App() {
 		repo: "portfolio",
 		repoes: [],
 		path: "$POPATH/..",
-		first: true
+		first: true,
+		ftp: true
 	});
 
 	let [theme, setTheme] = useState({
@@ -430,11 +431,26 @@ function App() {
 		}));
 	};
 
+	function onFtpChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.value;
+
+		let o_copy = {...exporter};
+
+		o_copy.ftp = Boolean.apply(null, [parseInt(value)]);
+
+		setExporter(params => ({
+			...o_copy
+		}));
+	};
+
+
 	return (
 		<BrowserRouter>
 			<Routes>
-				<Route path="*" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} /> } />
-				<Route path="/exporter" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} /> } />
+				<Route path="*" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
+				<Route path="/exporter" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
 				<Route path="/theme" element={ <Theme state={theme} onCheckChange={onThemeCheckChange} onInputChange={onThemeInputChange} onThemeChange={onThemeChange} packages={packages} selected={selectedPackages} onPackageChange={onPackageChange} /> } />
 				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onCheckChange={onCreatorCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} /> } />
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
