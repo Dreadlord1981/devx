@@ -223,7 +223,8 @@ pub struct ExportArgs {
 	pub dist: bool,
 	pub pack: bool,
 	pub repo: String,
-	pub path: String
+	pub path: String,
+	pub ftp: bool
 }
 
 impl Handler for ExportArgs {
@@ -261,9 +262,11 @@ impl Handler for ExportArgs {
 					.arg(&self.password)
 					.arg("-d")
 					.arg(&self.destination)
-					.arg("-f")
 					.arg("-s");
-		
+					
+					if self.ftp {
+						cmd.arg("-f");
+					}
 				
 					if self.create {
 						cmd.arg("-c");
