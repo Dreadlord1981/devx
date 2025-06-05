@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 
 function Theme(props) {
@@ -16,6 +17,59 @@ function Theme(props) {
 
 	const [working, setWorking] = useState(false);
 	const [log, setLog] = useState("");
+
+	function isValid() {
+
+		let valid = state.clean;
+		let packageSelected = false;
+
+		if (valid) {
+
+			if (
+				state.build ||
+				state.zip ||
+				state.update ||
+				state.export
+			) {
+				valid = state.theme != ""
+			}
+		}
+
+		if (!valid) {
+			
+			packages.forEach(function(o_config) {
+
+				if (!packageSelected) {
+					packageSelected = isSelected(o_config.name);
+				}
+			});
+
+			valid = packageSelected;
+
+			if (valid) {
+				
+				if (state.export) {
+
+					valid = (
+						state.user && 
+						state.password && 
+						state.host &&
+						state.icebreak &&
+						state.ifs
+					);
+				}
+				else {
+					valid = (
+						state.build ||
+						state.zip ||
+						state.update
+					)
+				}
+			}
+		}
+
+		return valid && !working;
+	}
 
 	function updatestatus(o_payload, b_done) {
 
@@ -215,11 +269,7 @@ function Theme(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 		

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 
 function Package(props) {
@@ -14,6 +15,13 @@ function Package(props) {
 
 	const [working, setWorking] = useState(false);
 	const [log, setLog] = useState("");
+
+	function isValid() {
+		
+		let valid = state.user && state.password && state.host;
+
+		return valid && !working;
+	}
 
 	function updatestatus(o_payload, b_done) {
 
@@ -176,11 +184,7 @@ function Package(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 	);

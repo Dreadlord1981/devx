@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 
 function Builder(props) {
@@ -45,6 +46,24 @@ function Builder(props) {
 			setWorking(false);
 		}
 
+	}
+
+	function isValid() {
+
+		let valid = false;
+
+		if (
+			state.user &&
+			state.ifs &&
+			state.password &&
+			state.host &&
+			state.deploy &&
+			state.bin
+		) {
+			valid = true;
+		}
+
+		return valid && !working;
 	}
 
 	async function onClick() {
@@ -174,11 +193,7 @@ function Builder(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 	);

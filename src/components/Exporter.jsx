@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 function Exporter(props) {
 
@@ -73,6 +74,34 @@ function Exporter(props) {
 			setWorking(false);
 		}
 
+	}
+
+	function isValid() {
+
+		let valid = false;
+
+		if (
+			state.user &&
+			state.destination &&
+			state.password &&
+			state.host &&
+			state.path &&
+			(
+				state.create ||
+				state.dist ||
+				state.export
+			)
+		) {
+			
+			repoes.forEach(function(o_config) {
+
+				if (!valid) {
+					valid = isSelected(o_config.name);
+				}
+			});
+		}
+
+		return valid && !working;
 	}
 
 	async function onClick() {
@@ -222,11 +251,7 @@ function Exporter(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 	)

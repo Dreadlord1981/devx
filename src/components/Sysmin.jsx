@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 function Sysmin(props) {
 
@@ -125,11 +126,7 @@ function Sysmin(props) {
                         </div>
                     </div>
                 </div>
-                <div className="toolbar">
-                    <div className="tbfill" />
-                    <button disabled={working} onClick={onClearClick}>Clear</button>
-                    <button disabled={working} className="primary" onClick={onClick}>Ok</button>
-                </div>
+               <Toolbar onClearClick={onClearClick} onClick={onClick} valid={!working}/>
             </div>
         </>
     );

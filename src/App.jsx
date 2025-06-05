@@ -351,6 +351,10 @@ function App() {
 
 		let o_copy = {...server};
 
+		if (o_copy.server != value) {
+			o_copy.config = "";
+		}
+
 		o_copy.server = value;
 
 		let a_configs = await invoke("get_server_configs", {path: o_copy.path, server: value});

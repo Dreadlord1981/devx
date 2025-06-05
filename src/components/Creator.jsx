@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
-
+import Toolbar from "./Toolbar";
 
 function Creatator(props) {
 
@@ -20,6 +20,33 @@ function Creatator(props) {
 
 	const [working, setWorking] = useState(false);
 	const [log, setLog] = useState("");
+
+	function isValid() {
+
+		let valid = false;
+		let packageSelected = false;
+		let projectSelected = false;
+
+		if (state.name) {
+			packages.forEach(function(o_config) {
+
+				if (!packageSelected) {
+					packageSelected = isSelected(o_config.name);
+				}
+			});
+
+			projects.forEach(function(s_name) {
+
+				if (!projectSelected) {
+					projectSelected = isProjectSelected(s_name);
+				}
+			});
+
+			valid = packageSelected && projectSelected;
+		}
+
+		return valid && !working;
+	}
 
 	function updatestatus(o_payload, b_done) {
 
@@ -202,11 +229,7 @@ function Creatator(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 		

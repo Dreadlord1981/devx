@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
 import Navigation from "./Navigation";
+import Toolbar from "./Toolbar";
 
 
 function Server(props) {
@@ -65,6 +66,28 @@ function Server(props) {
 	function isCacheSelected(b_value) {
 
 		return cache == b_value;
+	}
+
+	function isValid() {
+
+		let serverSelected = false;
+		let configSelected = false;
+
+		servers.forEach(function(o_sever) {
+
+			if (!serverSelected) {
+				serverSelected = isSelected(o_sever.name);
+			}
+		});
+
+		configs.forEach(function(o_config) {
+
+			if (!configSelected) {
+				configSelected = isConfigSelected(o_config.name);
+			}
+		});
+
+		return serverSelected && configSelected;
 	}
 
 	async function onClick() {
@@ -144,11 +167,11 @@ function Server(props) {
 
 	return (
 		<>
-			<Navigation active={"server"} working={working}/>
+			<Navigation active={"server"} working={false}/>
 			<div className="container">
 				<div className="layout-hbox flex">
 					<div className="form flex">
-						<fieldset disabled={working}>
+						<fieldset>
 							<legend>Server</legend>
 							<div className="field-wrapper">
 								<label className="field-label" htmlFor="path">Path:</label>
@@ -156,7 +179,7 @@ function Server(props) {
 							</div>
 						</fieldset>
 						{servers.length > 0 &&
-							<fieldset disabled={working} className="overflow-auto max-height">
+							<fieldset className="overflow-auto max-height">
 								<legend>Servers</legend>
 								{
 									servers.map(function(o_config) {
@@ -169,7 +192,7 @@ function Server(props) {
 							</fieldset>
 						}
 						{configs.length > 0 &&
-							<fieldset disabled={working} className="flex overflow-auto">
+							<fieldset className="flex overflow-auto">
 								<legend>Configs</legend>
 								{
 									configs.map(function(o_config) {
@@ -181,7 +204,7 @@ function Server(props) {
 								}
 							</fieldset>
 						}
-						<fieldset disabled={working}>
+						<fieldset>
                             <legend>Caching</legend>
                             <div className="field-wrapper">
                                 <label className="field-label" htmlFor="no-cache-input">No cache:</label>
@@ -201,11 +224,7 @@ function Server(props) {
 						</div>
 					</div>
 				</div>
-				<div className="toolbar">
-					<div className="tbfill" />
-					<button disabled={working} onClick={onClearClick}>Clear</button>
-					<button disabled={working} className="primary" onClick={onClick}>Ok</button>
-				</div>
+				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
 		</>
 	);
