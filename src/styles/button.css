@@ -7,6 +7,7 @@ button {
 	cursor: pointer;
 	border-radius: 3px;
 	margin-right: 10px;
+	transition: all 250ms;
 }
 
 button:hover:enabled {
@@ -40,11 +41,13 @@ button:disabled {
 }
 
 @media (prefers-color-scheme: dark) {
+
+
 	button {
-		background-color: #202020;
-		border: 1px solid #515457;
+		background-color: var(--background-color);
+		border: 1px solid var(--border-color);
 		padding: 10px;
-		color: #fff;
+		color: var(--color);
 		border: none;
 		cursor: pointer;
 		border-radius: 3px;
@@ -52,30 +55,51 @@ button:disabled {
 	}
 
 	button:hover {
-		background-color: #313131;
-		color: #000000;
-	}
-
-	button:hover {
-		background-color: #52057B;
-		color: #ffffff;
+		background-color: var(--hover-color);
+		color: var(--color);
 	}
 	
 	button:active {
-		background-color: #BC6FF1;
+		background-color: var(--hover-color);
 	}
 	
 	button:focus {
-		background-color: #BC6FF1;
+		background-color: var(--hover-color);
+	}
+
+	button:hover:enabled {
+		color: var(--color);
+		background-color: var(--hover-color);
+	}
+
+	button:hover:disabled {
+		background-color: var(--background-color);
+		color: var(--color);
+	}
+
+	button:active:enabled {
+		color: var(--color);
+		background-color: var(--hover-color);
+	}
+
+	button:focus:enabled {
+		color: var(--color);
+		background-color: var(--hover-color);
 	}
 	
 	.primary {
-		background-color: #52057B;
+		background-color: var(--primary-color);
 		margin-right: 0px;
 	}
 	
 	.primary:hover {
-		background-color: #BC6FF1;
+		background-color: var(--hover-color);
 	}
+
+	.primary:hover:disabled {
+		background-color: var(--primary-color);
+		color: var(--color);
+	}
+
 }
   

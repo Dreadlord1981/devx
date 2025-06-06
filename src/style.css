@@ -35,15 +35,37 @@ html, body {
 	flex-direction: column;
 	justify-content: center;
 	overflow: hidden;
-	background: rgb(255, 255, 255, 0.1);
     backdrop-filter: blur(1rem);
 	box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
 	border: 1px solid rgba(255,255,255,0.25);
 }
 
+fieldset {
+		border-radius: 5px;
+	}
+
 @media (prefers-color-scheme: dark) {
-  :root {
-    color: #ffffff;
-    background-color: #202020;
-  }
+
+	:root {
+		color: #ffffff;
+		background-color: #121212;
+		--border-color: #717171;
+		--background-color: #121212;
+		--primary-color: #ff5900;
+		--hover-color: #ffa87a;
+		--field-border-color: #ffa87a;
+		--color: #ffffff;
+		--menu-color: #282828;
+		--toolbar-color: #3f3f3f;
+	}
+
+	fieldset {
+		border: 1px solid var(--border-color);
+		background-color: var(--background-color);
+		border-radius: 5px;
+	}
+
+	.container {
+		background-color: var(--menu-color);
+	}
 }

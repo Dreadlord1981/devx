@@ -47,11 +47,15 @@
 }
 
 @media (prefers-color-scheme: dark) {
+
+	.menu {
+		background-color: var(--menu-color);
+	}
 	
 	.menu-item {
 		padding: 10px;
-		background-color: #52057B;
-		color: white;
+		background-color: var(--primary-color);
+		color: var(--color);
 		margin-top: 10px;
 		margin-left: 10px;
 		margin-right: 10px;
@@ -66,15 +70,15 @@
 	}
 	
 	.menu-item.selected {
-		background-color: #BC6FF1;
+		background-color: var(--hover-color);
 	}
 	
 	.menu-item:hover {
-		background-color: #BC6FF1;
+		background-color: var(--hover-color);
 	}
 	
 	.menu-item a {
-		color: white;
+		color: var(--color);
 		text-decoration: none;
 	}
 }

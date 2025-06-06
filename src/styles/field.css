@@ -29,6 +29,7 @@
 	flex: 0;
 	position: relative;
 	cursor: pointer;
+	margin-left: -1px;
   }
   
 .field-input[type=checkbox]:before {
@@ -78,6 +79,7 @@
 	width: 25px;
 	height: 25px;
 	padding: 6px;
+	margin-left: -3px;
 	/* background-color only for content */
 	border: 1px solid #052a7b;
 	background-color: transparent;
@@ -118,10 +120,12 @@ fieldset:disabled .field-wrapper {
 }
 
 @media (prefers-color-scheme: dark) {
+
+
 	.field-input {
-		border: 1px solid #52057B;
-		color: #ffffff;
-		background-color: #000000;
+		border: 1px solid var(--field-border-color);
+		color: var(--color);
+		background-color: var(--background-color);
 		padding: 5px 7px 5px;
 		line-height: 24px;
 		font-size: 16px;
@@ -132,13 +136,14 @@ fieldset:disabled .field-wrapper {
 	}
 	
 	.field-input:focus {
-		border: 1px solid #BC6FF1;
+		border: 1px solid var(--primary-color);
 	}
 	
 	.field-input[type=checkbox] {
 		flex: 0;
 		position: relative;
 		cursor: pointer;
+		margin-left: -3px;
 	  }
 	  
 	.field-input[type=checkbox]:before {
@@ -148,14 +153,14 @@ fieldset:disabled .field-wrapper {
 		height: 16px;
 		top: 0;
 		left: 0;
-		border: 1px solid #52057B;
+		border: 1px solid var(--field-border-color);
 		border-radius: 3px;
 		padding: 1px;
-		background-color: #000000;
+		background-color: var(--background-color);
 	}
 	  
 	.field-input[type=checkbox]:checked:before {
-		background-color: #52057B;
+		background-color: var(--primary-color);
 	}
 	  
 	.field-input[type=checkbox]:checked:after {
@@ -163,7 +168,7 @@ fieldset:disabled .field-wrapper {
 		display: block;
 		width: 5px;
 		height: 10px;
-		border: solid white;
+		border: solid var(--color);
 		border-width: 0 2px 2px 0;
 		-webkit-transform: rotate(45deg);
 		-ms-transform: rotate(45deg);
@@ -174,29 +179,30 @@ fieldset:disabled .field-wrapper {
 	}
 
 	.field-input[type="radio"] {
-		border: 1px solid #52057B;
-		background-color: black;
+		margin-left: -5px;
+		border: 1px solid var(--field-border-color);
+		background-color: var(--background-color);
 	}
 
 	.field-input[type="radio"]:after {
 		content: " ";
-		background-color: white;
+		background-color: var(--color);
 	}
 	
 	.field-input[type=checkbox]:focus:before {
-		border: 1px solid #BC6FF1;
+		border: 1px solid var(--primary-color);
 	}
 
 	.field-input[type="radio"]:checked:after{
-		background-color: #BC6FF1;
-		border-color: #bbbbbb
+		background-color: var(--primary-color);
+		border-color: var(--border-color)
 	}
 	
 	.field-input[type="radio"]:focus {
-		border: 1px solid #BC6FF1;
+		border: 1px solid var(--primary-color);
 	}
 	
 	.field-input[type="radio"]:focus:after {
-		border: 1px solid #BC6FF1;
+		border: 1px solid var(--field-border-color);
 	}
 }
