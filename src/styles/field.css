@@ -70,41 +70,36 @@
 
 .field-input[type="radio"] {
 
-	/* remove standard background appearance */
 	-webkit-appearance: none;
 	-moz-appearance: none;
 	appearance: none;
-	/* create custom radiobutton appearance */
 	display: inline-block;
 	width: 25px;
 	height: 25px;
 	padding: 6px;
 	margin-left: -3px;
-	/* background-color only for content */
 	border: 1px solid #052a7b;
 	background-color: transparent;
 	border-radius: 50%;
 	flex: none;
 	position: relative;
+	cursor: pointer;
 }
 
 .field-input[type="radio"]:after {
 	content: " ";
 	background-color: white;
-	position: relative;
 	width: 10px;
 	height: 10px;
 	position: absolute;
 	border: 1px solid #bbbbbb;
-	left: 50%;
-	top: 50%;
 	border-radius: 50%;
-	translate: -55%	-55%;
+	translate: -3%	-5%;
 }
 
 .field-input[type="radio"]:checked:after{
 	background-color: #6facf1;
-	border-color: #bbbbbb
+	border-color: #bbbbbb;
 }
 
 .field-input[type="radio"]:focus {
