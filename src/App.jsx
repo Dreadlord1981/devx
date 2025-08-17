@@ -59,7 +59,8 @@ function App() {
 		bin: "CAPDEV",
 		build_icecap: false,
 		build_portfolio: false,
-		release: false
+		release: false,
+		target: "*CURRENT"
 	});
 
 	let [statePackage, setStatePackage] = useState({
@@ -77,6 +78,7 @@ function App() {
 
 	let [creator, setCreator] = useState({
 		name: "",
+		path: "$POPATH/../themes", 
 		extends: [],
 		selected: [],
 		projects_selected: [],
@@ -225,16 +227,26 @@ function App() {
 		}));
 	};
 
-	function onCreatorCheckChange(i_event) {
+	function onCreatorExtendCheckChange(i_event) {
 		
 		var i_target = i_event.target;
 		var value = i_target.checked;
 
 		let o_copy = {...creator};
+		let a_selected = Array.prototype.slice.call(o_copy.selected);
 
-		o_copy.selected = [
-			i_target.name
-		];
+		if (!value) {
+			a_selected = a_selected.filter(function(s_name) {
+				return s_name != i_target.name;
+			});
+		}
+		else {
+			a_selected.push(i_target.name);
+		}
+
+		a_selected.sort();
+
+		o_copy.selected = a_selected;
 
 		setCreator(params => ({
 			...o_copy
@@ -248,9 +260,11 @@ function App() {
 
 		let o_copy = {...creator};
 
-		o_copy.project_selected = [
+		o_copy.projects_selected = [
 			i_target.name
 		];
+
+		o_copy.selected = [];
 
 		setCreator(params => ({
 			...o_copy
@@ -271,7 +285,7 @@ function App() {
 		}));
 	};
 
-	function onCreatorOptionChange(i_event) {
+	async function onCreatorOptionChange(i_event) {
 		
 		var i_target = i_event.target;
 		var value = i_target.checked;
@@ -290,6 +304,11 @@ function App() {
 		if (i_target.name == "generate") {
 			o_copy.create = false;
 		}
+
+		let o_config = await getProjectConfig();
+
+		o_copy.projects = o_config.projects;
+		o_copy.extends = o_config.packages;
 
 		setCreator(params => ({
 			...o_copy
@@ -321,14 +340,12 @@ function App() {
 		let o_copy = {...creator};
 
 		let a_projects = await invoke("get_themes", {});
-
 		let a_packages = await invoke("get_packages", {theme: "sitemule"});
 
-		o_copy.extends = a_packages;
-		o_copy.projects = a_projects;
-
-		setCreator(o_copy);
-
+		return {
+			projects: a_projects,
+			packages: a_packages
+		};
 	}
 
 	async function onPathChange(i_event) {
@@ -483,7 +500,7 @@ function App() {
 				<Route path="*" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
 				<Route path="/exporter" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
 				<Route path="/theme" element={ <Theme state={theme} onCheckChange={onThemeCheckChange} onInputChange={onThemeInputChange} onThemeChange={onThemeChange} packages={packages} selected={selectedPackages} onPackageChange={onPackageChange} /> } />
-				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onCheckChange={onCreatorCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} onOptionChange={onCreatorOptionChange} /> } />
+				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onExtendChange={onCreatorExtendCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} onOptionChange={onCreatorOptionChange} /> } />
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
 				<Route path="/package" element={ <Package state={statePackage} onInputChange={onPackageInputChange} /> } />
 				<Route path="/sysmin" element={ <Sysmin state={stateSysmin} onInputChange={onSysminInputChange} /> } />

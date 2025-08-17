@@ -201,8 +201,8 @@ pub async fn run_server(
 ) {
 	let server = args.server.clone();
 	let server_config = args.config.clone();
-	let server_port =  args.port.clone();
-	let server_https =args.https.clone();
+	let server_port =  args.port;
+	let server_https =args.https;
 	
 	let url = if server_https {
 		format!("https://localhost:{server_port}")

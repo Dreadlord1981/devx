@@ -13,7 +13,7 @@ function Creatator(props) {
 	let generate = state.generate;
 
 	let selected = state.selected || [];
-	let project_selected = state.project_selected || [];
+	let projects_selected = state.projects_selected || [];
 
 	let logchange = props.logchange || [];
 
@@ -29,7 +29,7 @@ function Creatator(props) {
 		let packageSelected = false;
 		let projectSelected = false;
 
-		if (state.name) {
+		if (generate) {
 			packages.forEach(function(o_config) {
 
 				if (!packageSelected) {
@@ -45,6 +45,13 @@ function Creatator(props) {
 			});
 
 			valid = packageSelected && projectSelected;
+		}
+		else {
+			valid = state.name ? true : false;
+		}
+
+		if (!state.path) {
+			valid = false;
 		}
 
 		return valid && !working;
@@ -99,7 +106,7 @@ function Creatator(props) {
 
 		var b_found = false;
 
-		project_selected.forEach(function(s_search) {
+		projects_selected.forEach(function(s_search) {
 			if (s_search == s_value) {
 				b_found = true;
 			}
@@ -115,8 +122,9 @@ function Creatator(props) {
 
 		let o_args = {
 			name: state.name,
-			project: state.project_selected.join(""),
-			extends: state.selected.join(""),
+			path: state.path,
+			project: state.projects_selected.join(""),
+			extends: state.selected,
 			create: state.create
 		};
 
@@ -132,7 +140,7 @@ function Creatator(props) {
 
 	useEffect(function() {
 
-		let i_promise = invoke("update_title", {title: "Theme creator"});
+		let i_promise = invoke("update_title", {title: "Project creator"});
 
 		if (inputRef) {
 			inputRef.current.focus();
@@ -191,59 +199,72 @@ function Creatator(props) {
 				<div className="layout-hbox flex">
 					<div className="form flex">
 						<fieldset disabled={working}>
-							<legend>Theme</legend>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="name">Name:</label>
-								<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.name} name="name"></input>
-							</div>
-						</fieldset>
-
-						<fieldset disabled={working}>
 							<legend>Options</legend>
 							<div key="create" className="field-wrapper">
 								<input type="checkbox" checked={create} onChange={props.onOptionChange} className="field-input maring-right-20" name="create"></input>
-								<label className="field-label" htmlFor="create">Create</label>
+								<label className="field-label" htmlFor="create">Create project</label>
 							</div>
 							<div key="generate" className="field-wrapper">
 								<input type="checkbox" checked={generate} onChange={props.onOptionChange} className="field-input maring-right-20" name="generate"></input>
-								<label className="field-label" htmlFor="generate">Generate</label>
+								<label className="field-label" htmlFor="generate">Generate theme</label>
 							</div>
 						</fieldset>
-						{generate &&
-							(function(){
-								if (generate) {
-									return <>
-										{projects.length > 0 &&
-											<fieldset disabled={working} className="flex overflow-auto">
-												<legend>Project</legend>
-												{
-													projects.map(function(s_name) {
-														return <div key={s_name} className="field-wrapper">
-															<input type="checkbox" checked={isProjectSelected(s_name)} onChange={props.onProjectChange} className="field-input maring-right-20" name={s_name}></input>
-															<label className="field-label" htmlFor={s_name}>{s_name}</label>
-														</div>
-													})
-												}
-											</fieldset>
-										}
-										{packages.length > 0 &&
-											<fieldset disabled={working} className="flex overflow-auto">
-												<legend>Extend</legend>
-												{
-													packages.map(function(o_config) {
-														return <div key={o_config.name} className="field-wrapper">
-															<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onCheckChange} className="field-input maring-right-20" name={o_config.name}></input>
-															<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
-														</div>
-													})
-												}
-											</fieldset>
-										}
-									</>
-								}
-							}
 
-							)()
+						{create &&
+							<fieldset disabled={working}>
+								<legend>Project</legend>
+								<div className="field-wrapper">
+									<label className="field-label" htmlFor="path">Path:</label>
+									<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.path} name="path"></input>
+								</div>
+								<div className="field-wrapper">
+									<label className="field-label" htmlFor="name">Name:</label>
+									<input className="field-input" onChange={props.onInputChange} value={state.name} name="name"></input>
+								</div>
+							</fieldset>
+						}
+
+						{generate &&
+							
+							<>
+								<fieldset disabled={working} className="hidden">
+									<legend>Project</legend>
+									<div className="field-wrapper">
+										<label className="field-label" htmlFor="path">Path:</label>
+										<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.path} name="path"></input>
+									</div>
+									<div className="field-wrapper">
+										<label className="field-label" htmlFor="name">Name:</label>
+										<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.name} name="name"></input>
+									</div>
+								</fieldset>
+								{projects.length > 0 &&
+									<fieldset disabled={working} className="flex overflow-auto">
+										<legend>Project</legend>
+										{
+											projects.map(function(s_name) {
+												return <div key={s_name} className="field-wrapper">
+													<input type="checkbox" checked={isProjectSelected(s_name)} onChange={props.onProjectChange} className="field-input maring-right-20" name={s_name}></input>
+													<label className="field-label" htmlFor={s_name}>{s_name}</label>
+												</div>
+											})
+										}
+									</fieldset>
+								}
+								{packages.length > 0 &&
+									<fieldset disabled={working} className="flex overflow-auto">
+										<legend>Extend</legend>
+										{
+											packages.map(function(o_config) {
+												return <div key={o_config.name} className="field-wrapper">
+													<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onExtendChange} className="field-input maring-right-20" name={o_config.name}></input>
+													<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
+												</div>
+											})
+										}
+									</fieldset>
+								}
+							</>
 						}
 
 					</div>

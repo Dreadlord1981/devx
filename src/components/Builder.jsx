@@ -58,7 +58,8 @@ function Builder(props) {
 			state.password &&
 			state.host &&
 			state.deploy &&
-			state.bin
+			state.bin &&
+			state.target
 		) {
 			valid = true;
 		}
@@ -151,6 +152,10 @@ function Builder(props) {
 										})
 									}
 								</select>
+							</div>
+							<div className="field-wrapper">
+								<label className="field-label" htmlFor="target">Target:</label>
+								<input className="field-input" onChange={props.onInputChange} value={state.target} name="target"></input>
 							</div>
 						</fieldset>
 						<fieldset disabled={working}>

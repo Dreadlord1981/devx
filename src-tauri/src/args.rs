@@ -2,6 +2,7 @@ use std::{io::{BufRead, BufReader, Read}, os::windows::process::CommandExt, path
 use serde::{Deserialize, Serialize};
 use sysinfo::{Pid, System};
 use tauri::{Manager, Window};
+use zip::read::root_dir_common_filter;
 
 use crate::message::Payload;
 
@@ -208,6 +209,8 @@ impl Handler for PackerArgs {
 			error: false,
 			message: "Done".to_string()
 		}).unwrap();
+
+		let _ = child.wait();
 	}
 }
 
@@ -416,6 +419,8 @@ impl Handler for ExportArgs {
 					error: false,
 					message: "Done".to_string()
 				}).unwrap();
+
+				let _ = child.wait();
 		}
 		else {
 
@@ -439,7 +444,8 @@ pub struct IcecBuilderArgs {
 	pub bin: String,
 	pub build_icecap: bool,
 	pub build_portfolio: bool,
-	pub release: bool
+	pub release: bool,
+	pub target: String
 }
 
 impl Handler for IcecBuilderArgs {
@@ -470,7 +476,9 @@ impl Handler for IcecBuilderArgs {
 		.arg("-b")
 		.arg(&self.bin)
 		.arg("-d")
-		.arg(&self.deploy);
+		.arg(&self.deploy)
+		.arg("--target")
+		.arg(&self.target);
 
 		if self.release {
 			cmd.arg("-r");
@@ -571,6 +579,8 @@ impl Handler for IcecBuilderArgs {
 				window.emit("icebuilder-status", payload).unwrap();
 			}
 		}
+
+		let _ = child.wait();
 	}
 }
 
@@ -765,186 +775,423 @@ impl Handler for PackageBuilderArgs {
 				vec_buf = [0; 1024];
 			}
 		}
+
+		let _ = child.wait();
 	}
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ThemeArgs {
+	pub path: String,
 	pub name: String,
 	pub project: String,
-	pub extends: String,
+	pub extends: Vec<String>,
 	pub create: bool
 }
 
 impl Handler for ThemeArgs {
 	fn run(&self, window: &Window) {
 
-		let theme_base = shellexpand::full("$POPATH/../themes").unwrap();
+		let theme_base = shellexpand::full(&self.path).unwrap();
 
 		let theme_path = PathBuf::from(theme_base.to_string());
 
-		let project_path = theme_path.clone().join(&self.project);
-		
-		let mut cmd = Command::new("sencha.exe");
-		cmd.current_dir(project_path);
+		if self.create {
 
-		cmd.arg("generate");
-		cmd.arg("theme");
-		
-		if !self.extends.is_empty() {
-			cmd.arg("--extend");
-			cmd.arg(self.extends.clone());
-		}
+			let app = window.app_handle();
 
-		cmd.arg(self.name.clone());
+			let local_data_path = dirs::data_local_dir().unwrap();
 
-		if cfg!(target_os = "windows") {
-			cmd.creation_flags(0x08000000);
-		}
+			let bin_path = app
+			.path_resolver()
+			.resolve_resource("bin")
+			.expect("Could not find directory");
 
-		cmd.stdout(Stdio::piped());
-		cmd.stderr(Stdio::piped());
+			let devx_the = local_data_path.join("devx");
 
-		let mut child = cmd.spawn().unwrap();
-	
-		let stdout = child.stdout.take().unwrap();
-		let stderr = child.stderr.take().unwrap();
-		
-		let mut out_reader = BufReader::new(stdout);
-		let mut err_reader = BufReader::new(stderr);
-	
-		let mut vec_buf = [0; 1024];
-	
-		let mut last = "".to_string();
-		let mut update = false;
-	
-		loop {
+			let ext_path = devx_the.join("ext-6.6.0");
 
-			let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
-			
-			if bytes == 0 {
-				break;
-			}
-
-			if bytes > 0 {
-
-				let slice = &vec_buf[..bytes];
-	
-				let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
-
-				if out_buffer.contains('\r') {
-					let temp: Vec<&str> = out_buffer.split('\r').collect();
-					out_buffer = temp.first().unwrap().to_string();
-				}
-
-				let first_temp: Vec<u8> = vec![27];
-				let first_str = String::from_utf8(first_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&first_str, "");
-
-				let second_temp: Vec<u8> = vec![91, 50, 65];
-				let second_str = String::from_utf8(second_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&second_str, "");
-
-				let last_temp: Vec<u8> = vec![91, 74];
-				let last_str = String::from_utf8(last_temp).unwrap();
-
-				out_buffer = out_buffer.replace(&last_str, "");
-
-				if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
-					out_buffer += "\n";
+			if !&ext_path.exists() {
+				
+				if devx_the.exists() {
+					std::fs::remove_dir_all(&devx_the).unwrap();
 				}
 				
-				if !out_buffer.is_empty() && out_buffer != last {
-		
-					std::thread::sleep(time::Duration::from_millis(10));
+				std::fs::create_dir(devx_the).unwrap();
 
-					let payload = Payload {
-						update,
-						error: false,
-						message: out_buffer.clone()
-					};
+				let payload = Payload {
+					update: false,
+					error: false,
+					message: "Extracting ext-6.6.0\n".to_string()
+				};
 
-					update = false;
+				window.emit("creator-status", payload).unwrap();
 
-					window.emit("creator-status", payload).unwrap();
+				let mut archive = zip::ZipArchive::new(
+					std::fs::File::open(bin_path.join("ext-6.6.0.zip")).unwrap()
+				).unwrap();
+				
+				archive.extract_unwrapped_root_dir(&ext_path, root_dir_common_filter).unwrap();
 
-					last = out_buffer;				
-				}
-				else if out_buffer != "\n" {
-						update = true;
-				}
+				let payload = Payload {
+					update: false,
+					error: false,
+					message: "Extraction complete\n".to_string()
+				};
 
-				vec_buf = [0; 1024];
+				window.emit("creator-status", payload).unwrap();
 			}
-		}
+
+			let mut str_ext_path = ext_path.to_string_lossy().to_string();
+			str_ext_path = str_ext_path.replace("\\\\?", "");
+
+			let project_path = theme_path.clone().join(&self.name);
+
+			let mut str_project_path = project_path.to_string_lossy().to_string();
+			str_project_path = str_project_path.replace("\\\\?", "");
+
+			let mut cmd = Command::new("sencha.exe");
+			cmd.arg("-sdk");
+			cmd.arg(&str_ext_path);
+			cmd.arg("generate");
+			cmd.arg("app");
+			cmd.arg("-classic");
+			cmd.arg(&self.name);
+			cmd.arg(&str_project_path);
+
+			if cfg!(target_os = "windows") {
+				cmd.creation_flags(0x08000000);
+			}
+
+			cmd.stdout(Stdio::piped());
+			cmd.stderr(Stdio::piped());
+
+			let mut child = cmd.spawn().unwrap();
 		
-		vec_buf = [0; 1024];
-
-		
-		last = "".to_string();
-		update = false;
-
-		loop {
-
-			let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+			let stdout = child.stdout.take().unwrap();
+			let stderr = child.stderr.take().unwrap();
 			
-			if bytes == 0 {
-				break;
-			}
+			let mut out_reader = BufReader::new(stdout);
+			let mut err_reader = BufReader::new(stderr);
+		
+			let mut vec_buf = [0; 1024];
+		
+			let mut last = "".to_string();
+			let mut update = false;
+		
+			loop {
 
-			if bytes > 0 {
-
-				let slice = &vec_buf[..bytes];
-	
-				let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
-
-				if out_buffer.contains('\r') {
-					let temp: Vec<&str> = out_buffer.split('\r').collect();
-					out_buffer = temp.first().unwrap().to_string();
+				let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
+				
+				if bytes == 0 {
+					break;
 				}
 
-				let first_temp: Vec<u8> = vec![27];
-				let first_str = String::from_utf8(first_temp).unwrap();
+				if bytes > 0 {
 
-				out_buffer = out_buffer.replace(&first_str, "");
+					let slice = &vec_buf[..bytes];
+		
+					let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
 
-				let second_temp: Vec<u8> = vec![91, 50, 65];
-				let second_str = String::from_utf8(second_temp).unwrap();
+					if out_buffer.contains('\r') {
+						let temp: Vec<&str> = out_buffer.split('\r').collect();
+						out_buffer = temp.first().unwrap().to_string();
+					}
 
-				out_buffer = out_buffer.replace(&second_str, "");
+					let first_temp: Vec<u8> = vec![27];
+					let first_str = String::from_utf8(first_temp).unwrap();
 
-				let last_temp: Vec<u8> = vec![91, 74];
-				let last_str = String::from_utf8(last_temp).unwrap();
+					out_buffer = out_buffer.replace(&first_str, "");
 
-				out_buffer = out_buffer.replace(&last_str, "");
+					let second_temp: Vec<u8> = vec![91, 50, 65];
+					let second_str = String::from_utf8(second_temp).unwrap();
 
-				if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
-					out_buffer += "\n";
+					out_buffer = out_buffer.replace(&second_str, "");
+
+					let last_temp: Vec<u8> = vec![91, 74];
+					let last_str = String::from_utf8(last_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&last_str, "");
+
+					if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+						out_buffer += "\n";
+					}
+					
+					if !out_buffer.is_empty() && out_buffer != last {
+			
+						std::thread::sleep(time::Duration::from_millis(10));
+
+						let payload = Payload {
+							update,
+							error: false,
+							message: out_buffer.clone()
+						};
+
+						update = false;
+
+						window.emit("creator-status", payload).unwrap();
+
+						last = out_buffer;				
+					}
+					else if out_buffer != "\n" {
+							update = true;
+					}
+
+					vec_buf = [0; 1024];
+				}
+			}
+			
+			vec_buf = [0; 1024];
+
+			
+			last = "".to_string();
+			update = false;
+
+			loop {
+
+				let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+				
+				if bytes == 0 {
+					break;
+				}
+
+				if bytes > 0 {
+
+					let slice = &vec_buf[..bytes];
+		
+					let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+					if out_buffer.contains('\r') {
+						let temp: Vec<&str> = out_buffer.split('\r').collect();
+						out_buffer = temp.first().unwrap().to_string();
+					}
+
+					let first_temp: Vec<u8> = vec![27];
+					let first_str = String::from_utf8(first_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&first_str, "");
+
+					let second_temp: Vec<u8> = vec![91, 50, 65];
+					let second_str = String::from_utf8(second_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&second_str, "");
+
+					let last_temp: Vec<u8> = vec![91, 74];
+					let last_str = String::from_utf8(last_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&last_str, "");
+
+					if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+						out_buffer += "\n";
+					}
+					
+					if !out_buffer.is_empty() && out_buffer != last {
+			
+						std::thread::sleep(time::Duration::from_millis(10));
+
+						let payload = Payload {
+							update,
+							error: false,
+							message: out_buffer.clone()
+						};
+
+						update = false;
+
+						window.emit("creator-status", payload).unwrap();
+
+						last = out_buffer;				
+					}
+					else if out_buffer != "\n" {
+							update = true;
+					}
+
+					vec_buf = [0; 1024];
+				}
+			}
+
+			let _ = child.wait();
+		}
+		else {
+			let project_path = theme_path.clone().join(&self.project);
+
+			for extend in self.extends.iter() {
+
+				let mut parts: Vec<String> = extend
+				.split("-")
+				.map(|value| {
+					value.to_string()
+				})
+				.collect::<Vec<String>>();
+
+				if parts.len() > 1 {
+					let _ = parts.remove(0);
+					parts.insert(0, self.name.clone());
+				}
+
+				let theme = parts.join("-");
+
+				let mut cmd = Command::new("sencha.exe");
+
+				cmd.arg("generate");
+				cmd.arg("theme");
+				cmd.arg("--extend");
+				cmd.arg(extend);
+				cmd.arg(&theme);
+
+				cmd.current_dir(&project_path);
+
+				if cfg!(target_os = "windows") {
+					cmd.creation_flags(0x08000000);
+				}
+
+				cmd.stdout(Stdio::piped());
+				cmd.stderr(Stdio::piped());
+
+				let mut child = cmd.spawn().unwrap();
+			
+				let stdout = child.stdout.take().unwrap();
+				let stderr = child.stderr.take().unwrap();
+				
+				let mut out_reader = BufReader::new(stdout);
+				let mut err_reader = BufReader::new(stderr);
+			
+				let mut vec_buf = [0; 1024];
+			
+				let mut last = "".to_string();
+				let mut update = false;
+			
+				loop {
+
+					let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
+					
+					if bytes == 0 {
+						break;
+					}
+
+					if bytes > 0 {
+
+						let slice = &vec_buf[..bytes];
+			
+						let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+						if out_buffer.contains('\r') {
+							let temp: Vec<&str> = out_buffer.split('\r').collect();
+							out_buffer = temp.first().unwrap().to_string();
+						}
+
+						let first_temp: Vec<u8> = vec![27];
+						let first_str = String::from_utf8(first_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&first_str, "");
+
+						let second_temp: Vec<u8> = vec![91, 50, 65];
+						let second_str = String::from_utf8(second_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&second_str, "");
+
+						let last_temp: Vec<u8> = vec![91, 74];
+						let last_str = String::from_utf8(last_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&last_str, "");
+
+						if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+							out_buffer += "\n";
+						}
+						
+						if !out_buffer.is_empty() && out_buffer != last {
+				
+							std::thread::sleep(time::Duration::from_millis(10));
+
+							let payload = Payload {
+								update,
+								error: false,
+								message: out_buffer.clone()
+							};
+
+							update = false;
+
+							window.emit("creator-status", payload).unwrap();
+
+							last = out_buffer;				
+						}
+						else if out_buffer != "\n" {
+								update = true;
+						}
+
+						vec_buf = [0; 1024];
+					}
 				}
 				
-				if !out_buffer.is_empty() && out_buffer != last {
-		
-					std::thread::sleep(time::Duration::from_millis(10));
-
-					let payload = Payload {
-						update,
-						error: false,
-						message: out_buffer.clone()
-					};
-
-					update = false;
-
-					window.emit("creator-status", payload).unwrap();
-
-					last = out_buffer;				
-				}
-				else if out_buffer != "\n" {
-						update = true;
-				}
-
 				vec_buf = [0; 1024];
+
+				
+				last = "".to_string();
+				update = false;
+
+				loop {
+
+					let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+					
+					if bytes == 0 {
+						break;
+					}
+
+					if bytes > 0 {
+
+						let slice = &vec_buf[..bytes];
+			
+						let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+						if out_buffer.contains('\r') {
+							let temp: Vec<&str> = out_buffer.split('\r').collect();
+							out_buffer = temp.first().unwrap().to_string();
+						}
+
+						let first_temp: Vec<u8> = vec![27];
+						let first_str = String::from_utf8(first_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&first_str, "");
+
+						let second_temp: Vec<u8> = vec![91, 50, 65];
+						let second_str = String::from_utf8(second_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&second_str, "");
+
+						let last_temp: Vec<u8> = vec![91, 74];
+						let last_str = String::from_utf8(last_temp).unwrap();
+
+						out_buffer = out_buffer.replace(&last_str, "");
+
+						if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+							out_buffer += "\n";
+						}
+						
+						if !out_buffer.is_empty() && out_buffer != last {
+				
+							std::thread::sleep(time::Duration::from_millis(10));
+
+							let payload = Payload {
+								update,
+								error: false,
+								message: out_buffer.clone()
+							};
+
+							update = false;
+
+							window.emit("creator-status", payload).unwrap();
+
+							last = out_buffer;				
+						}
+						else if out_buffer != "\n" {
+								update = true;
+						}
+
+						vec_buf = [0; 1024];
+					}
+				}
+
+				let _ = child.wait();
+
 			}
 		}
 	}
@@ -1125,6 +1372,8 @@ impl Handler for SysminArgs {
 				vec_buf = [0; 1024];
 			}
 		}
+
+		let _ = child.try_wait();
 	}
 }
 
@@ -1151,8 +1400,9 @@ impl Handler for ServerArgs {
 
 		let server = self.server.clone();
 		let config = self.config.clone();
-		let port = self.port.clone();
-		let https = self.https.clone();	
+		let port = self.port;
+		let https = self.https;	
+		let cache = self.cache;
 		
 		let app = window.app_handle();
 
@@ -1161,24 +1411,24 @@ impl Handler for ServerArgs {
 		.resolve_resource("bin")
 		.expect("Could not find directory");
 
-		let cmd_path = path.join("goserver.exe");
-		
-		let mut cmd = Command::new(cmd_path);
-
-		cmd
-			.arg("-f")
-			.arg(&server_base_path)
-			.arg("-s")
-			.arg(&self.config);
-
-		if cfg!(target_os = "windows") {
-			cmd.creation_flags(0x08000000);
-		}
-		if self.cache {
-			cmd.arg("-a");
-		} 
-
 		std::thread::spawn(move || {
+
+			let cmd_path = path.join("goserver.exe");
+		
+			let mut cmd = Command::new(cmd_path);
+
+			cmd
+				.arg("-f")
+				.arg(&server_base_path)
+				.arg("-s")
+				.arg(&config);
+
+			if cfg!(target_os = "windows") {
+				cmd.creation_flags(0x08000000);
+			}
+			if cache {
+				cmd.arg("-a");
+			} 
 
 			cmd.stdout(Stdio::piped());
 			cmd.stderr(Stdio::piped());
@@ -1357,6 +1607,8 @@ impl Handler for ServerArgs {
 					vec_buf = [0; 1024];
 				}
 			}
+
+			let _ = child.try_wait();
 		});
 	}
 }
