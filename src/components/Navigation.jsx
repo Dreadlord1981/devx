@@ -56,7 +56,6 @@ function Navigation(props) {
 			id: "sysmin",
 			link: "/sysmin"
 		},
-		,
 		{
 			text: "G",
 			id: "server",

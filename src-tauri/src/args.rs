@@ -772,7 +772,8 @@ impl Handler for PackageBuilderArgs {
 pub struct ThemeArgs {
 	pub name: String,
 	pub project: String,
-	pub extends: String
+	pub extends: String,
+	pub create: bool
 }
 
 impl Handler for ThemeArgs {

@@ -80,7 +80,9 @@ function App() {
 		extends: [],
 		selected: [],
 		projects_selected: [],
-		projects: []
+		projects: [],
+		create: true,
+		generate: false
 	});
 
 	const [selected, setSelected] = useState(["portfolio"]);
@@ -263,6 +265,31 @@ function App() {
 		let o_copy = {...creator};
 
 		o_copy[i_target.name] = value;
+
+		setCreator(params => ({
+			...o_copy
+		}));
+	};
+
+	function onCreatorOptionChange(i_event) {
+		
+		var i_target = i_event.target;
+		var value = i_target.checked;
+
+		let o_copy = {...creator};
+
+		if (value) {
+			o_copy[i_target.name] = value;
+		}
+		
+
+		if (i_target.name == "create") {
+			o_copy.generate = false;
+		}
+
+		if (i_target.name == "generate") {
+			o_copy.create = false;
+		}
 
 		setCreator(params => ({
 			...o_copy
@@ -456,7 +483,7 @@ function App() {
 				<Route path="*" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
 				<Route path="/exporter" element={ <Exporter state={exporter} onCheckChange={onCheckChange} onInputChange={onInputChange} onRepoChange={onRepoChange} selected={selected} onPathChange={onPathChange} onFirst={onFirst} onFtpChange={onFtpChange} /> } />
 				<Route path="/theme" element={ <Theme state={theme} onCheckChange={onThemeCheckChange} onInputChange={onThemeInputChange} onThemeChange={onThemeChange} packages={packages} selected={selectedPackages} onPackageChange={onPackageChange} /> } />
-				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onCheckChange={onCreatorCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} /> } />
+				<Route path="/creator" element={ <Creator state={creator} onInputChange={onCreatorInputChange} onCheckChange={onCreatorCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} onOptionChange={onCreatorOptionChange} /> } />
 				<Route path="/builder" element={ <Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} /> } />
 				<Route path="/package" element={ <Package state={statePackage} onInputChange={onPackageInputChange} /> } />
 				<Route path="/sysmin" element={ <Sysmin state={stateSysmin} onInputChange={onSysminInputChange} /> } />

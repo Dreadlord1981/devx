@@ -9,6 +9,8 @@ function Creatator(props) {
 	let state = props.state
 	let packages = state.extends || [];
 	let projects = state.projects || [];
+	let create = state.create;
+	let generate = state.generate;
 
 	let selected = state.selected || [];
 	let project_selected = state.project_selected || [];
@@ -114,7 +116,8 @@ function Creatator(props) {
 		let o_args = {
 			name: state.name,
 			project: state.project_selected.join(""),
-			extends: state.selected.join("")
+			extends: state.selected.join(""),
+			create: state.create
 		};
 
 		await invoke("create_theme", {
@@ -188,38 +191,61 @@ function Creatator(props) {
 				<div className="layout-hbox flex">
 					<div className="form flex">
 						<fieldset disabled={working}>
-							<legend>Create theme</legend>
+							<legend>Theme</legend>
 							<div className="field-wrapper">
 								<label className="field-label" htmlFor="name">Name:</label>
 								<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.name} name="name"></input>
 							</div>
 						</fieldset>
-						{projects.length > 0 &&
-							<fieldset disabled={working} className="flex overflow-auto">
-								<legend>Project</legend>
-								{
-									projects.map(function(s_name) {
-										return <div key={s_name} className="field-wrapper">
-											<input type="checkbox" checked={isProjectSelected(s_name)} onChange={props.onProjectChange} className="field-input maring-right-20" name={s_name}></input>
-											<label className="field-label" htmlFor={s_name}>{s_name}</label>
-										</div>
-									})
+
+						<fieldset disabled={working}>
+							<legend>Options</legend>
+							<div key="create" className="field-wrapper">
+								<input type="checkbox" checked={create} onChange={props.onOptionChange} className="field-input maring-right-20" name="create"></input>
+								<label className="field-label" htmlFor="create">Create</label>
+							</div>
+							<div key="generate" className="field-wrapper">
+								<input type="checkbox" checked={generate} onChange={props.onOptionChange} className="field-input maring-right-20" name="generate"></input>
+								<label className="field-label" htmlFor="generate">Generate</label>
+							</div>
+						</fieldset>
+						{generate &&
+							(function(){
+								if (generate) {
+									return <>
+										{projects.length > 0 &&
+											<fieldset disabled={working} className="flex overflow-auto">
+												<legend>Project</legend>
+												{
+													projects.map(function(s_name) {
+														return <div key={s_name} className="field-wrapper">
+															<input type="checkbox" checked={isProjectSelected(s_name)} onChange={props.onProjectChange} className="field-input maring-right-20" name={s_name}></input>
+															<label className="field-label" htmlFor={s_name}>{s_name}</label>
+														</div>
+													})
+												}
+											</fieldset>
+										}
+										{packages.length > 0 &&
+											<fieldset disabled={working} className="flex overflow-auto">
+												<legend>Extend</legend>
+												{
+													packages.map(function(o_config) {
+														return <div key={o_config.name} className="field-wrapper">
+															<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onCheckChange} className="field-input maring-right-20" name={o_config.name}></input>
+															<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
+														</div>
+													})
+												}
+											</fieldset>
+										}
+									</>
 								}
-							</fieldset>
+							}
+
+							)()
 						}
-						{packages.length > 0 &&
-							<fieldset disabled={working} className="flex overflow-auto">
-								<legend>Extend</legend>
-								{
-									packages.map(function(o_config) {
-										return <div key={o_config.name} className="field-wrapper">
-											<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onCheckChange} className="field-input maring-right-20" name={o_config.name}></input>
-											<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
-										</div>
-									})
-								}
-							</fieldset>
-						}
+
 					</div>
 					<div className="layout-fit flex">
 						<div className="output flex" ref={logRef}>
