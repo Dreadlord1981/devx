@@ -1,4 +1,4 @@
-use std::{io::{BufRead, BufReader, Read}, os::windows::process::CommandExt, path::PathBuf, process::{Command, Stdio}, sync::Mutex, time};
+use std::{fs::OpenOptions, io::{BufRead, BufReader, Read, Write}, net::ToSocketAddrs, os::windows::process::CommandExt, path::PathBuf, process::{Command, Stdio}, sync::Mutex, time};
 use serde::{Deserialize, Serialize};
 use sysinfo::{Pid, System};
 use tauri::{Manager, Window};
@@ -7,7 +7,7 @@ use zip::read::root_dir_common_filter;
 use crate::message::Payload;
 
 pub trait Handler {
-	fn run(&self, window: &Window);
+	fn run(&self, window: &Window) -> impl std::future::Future<Output = ()> + Send;
 }
 
 
@@ -32,7 +32,7 @@ pub struct PackerArgs {
 }
 
 impl Handler for PackerArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -232,7 +232,7 @@ pub struct ExportArgs {
 
 impl Handler for ExportArgs {
 	
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -449,7 +449,7 @@ pub struct IcecBuilderArgs {
 }
 
 impl Handler for IcecBuilderArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -598,7 +598,7 @@ pub struct PackageBuilderArgs {
 }
 
 impl Handler for PackageBuilderArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -790,7 +790,7 @@ pub struct ThemeArgs {
 }
 
 impl Handler for ThemeArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let theme_base = shellexpand::full(&self.path).unwrap();
 
@@ -807,18 +807,100 @@ impl Handler for ThemeArgs {
 			.resolve_resource("bin")
 			.expect("Could not find directory");
 
-			let devx_the = local_data_path.join("devx");
+			let devx_path = local_data_path.join("devx");
 
-			let ext_path = devx_the.join("ext-6.6.0");
+			let ext_path = devx_path.join("ext-6.6.0.zip");
 
 			if !&ext_path.exists() {
-				
-				if devx_the.exists() {
-					std::fs::remove_dir_all(&devx_the).unwrap();
+
+				if devx_path.exists() {
+					std::fs::remove_dir_all(&devx_path).unwrap();
 				}
 				
-				std::fs::create_dir(devx_the).unwrap();
+				std::fs::create_dir(&devx_path).unwrap();
 
+				let payload = Payload {
+					update: false,
+					error: false,
+					message: "Downloading ext-6.6.0\n".to_string()
+				};
+
+				window.emit("creator-status", payload).unwrap();
+
+				let address: Vec<_> = "webfiles.system-method.com:21".to_socket_addrs().unwrap().collect();
+
+				let mut conn = ftp::FtpStream::connect(address.get(0).unwrap()).unwrap();
+
+				let login_result = conn.login("system-method.com", "2Fast4you");
+
+				if let Ok(_) = login_result {
+
+					let payload = Payload {
+						update: false,
+						error: false,
+						message: "Donwloading zip file\n".to_string()
+					};
+
+					window.emit("creator-status", payload).unwrap();
+	
+					let payload = Payload {
+						update: false,
+						error: false,
+						message: "Bytes: 0\n".to_string()
+					};
+
+					window.emit("creator-status", payload).unwrap();
+
+					let _ = conn.retr("/webfiles/download/Tools/ext-6.6.0.zip", |stream| {
+
+						let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(&ext_path).unwrap();
+						
+						let mut buffer = [0; 4096];
+						let mut size = 0;
+
+						loop {
+
+							let result = stream.read(&mut buffer);
+
+							if let Ok(read_size) = result {
+
+								size = size + read_size;
+
+								if read_size == 0 {
+									break;
+								}
+								else {
+									
+									let payload = Payload {
+										update: true,
+										error: false,
+										message: format!("Bytes: {size}\n").to_string()
+									};
+									
+									window.emit("creator-status", payload).unwrap();
+
+									let _ = file.write_all(&buffer);
+
+									buffer = [0; 4096];
+
+									std::thread::sleep(time::Duration::from_millis(10));
+								}
+							}
+						}
+
+						Ok(())
+					});
+
+					let payload = Payload {
+						update: false,
+						error: false,
+						message: "Donwloading complete\n".to_string()
+					};
+
+					window.emit("creator-status", payload).unwrap();
+
+				}
+				
 				let payload = Payload {
 					update: false,
 					error: false,
@@ -828,7 +910,7 @@ impl Handler for ThemeArgs {
 				window.emit("creator-status", payload).unwrap();
 
 				let mut archive = zip::ZipArchive::new(
-					std::fs::File::open(bin_path.join("ext-6.6.0.zip")).unwrap()
+					std::fs::File::open(&ext_path).unwrap()
 				).unwrap();
 				
 				archive.extract_unwrapped_root_dir(&ext_path, root_dir_common_filter).unwrap();
@@ -1203,7 +1285,7 @@ pub struct SysminArgs {
 }
 
 impl Handler for SysminArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -1388,7 +1470,7 @@ pub struct ServerArgs {
 }
 
 impl Handler for ServerArgs {
-	fn run(&self, window: &Window) {
+	async fn run(&self, window: &Window) {
 
 		let server_base = shellexpand::full(&self.path.clone()).unwrap().to_string();
 
@@ -1613,7 +1695,7 @@ impl Handler for ServerArgs {
 	}
 }
 
-pub fn run<T>(args: T, window: &Window) 
+pub async fn run<T>(args: T, window: &Window) 
 where T: Handler{
-	args.run(window);
+	args.run(window).await;
 }

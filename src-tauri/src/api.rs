@@ -11,7 +11,8 @@ pub async fn packer(
 	args: PackerArgs
 ) {
 
-	run(args, &window);
+	run(args, &window).await;
+
 }
 
 #[tauri::command]
@@ -19,23 +20,63 @@ pub async fn get_packages(
 	theme: String
 ) -> Vec<Package> {
 
-	let theme_base = shellexpand::full("$POPATH/../themes").unwrap();
-
-	let theme_base = theme_base.trim();
-
-	let theme_base_path = PathBuf::from(theme_base);
-
-	let theme_path = theme_base_path.join(theme);
+	let path_result = shellexpand::full("$POPATH/../themes");
 
 	let mut packages: Vec<Package> = vec![];
 
-	if theme_path.exists() {
+	if let Ok(theme_base) = path_result {
 
-		let package_path = PathBuf::from(String::from("packages/local"));
+		let theme_base = theme_base.trim();
 
-		let local_path = theme_path.join(package_path);
+		let theme_base_path = PathBuf::from(theme_base);
 
-		let dir_entries = fs::read_dir(local_path);
+		let theme_path = theme_base_path.join(theme);
+
+		if theme_path.exists() {
+
+			let package_path = PathBuf::from(String::from("packages/local"));
+
+			let local_path = theme_path.join(package_path);
+
+			let dir_entries = fs::read_dir(local_path);
+
+			if let Ok(result_list) = dir_entries {
+
+				for entry in result_list.flatten() {
+
+					let meta = entry.metadata().unwrap();
+
+					if meta.is_dir() {
+
+						let name = entry.file_name();
+
+						packages.push(Package{
+							name: name.to_string_lossy().to_string()
+						});
+					}
+				}
+			}
+		}
+	} 
+
+	packages
+}
+
+#[tauri::command]
+pub async fn get_themes(
+) -> Vec<String> {
+
+	let path_result = shellexpand::full("$POPATH/../themes");
+	
+	let mut themes: Vec<String> = vec![];
+
+	if let Ok(theme_base) = path_result {
+
+		let theme_base = theme_base.trim();
+
+		let theme_base_path = PathBuf::from(theme_base);
+
+		let dir_entries = fs::read_dir(theme_base_path);
 
 		if let Ok(result_list) = dir_entries {
 
@@ -47,46 +88,12 @@ pub async fn get_packages(
 
 					let name = entry.file_name();
 
-					packages.push(Package{
-						name: name.to_string_lossy().to_string()
-					});
+					themes.push(name.to_string_lossy().to_string());
 				}
 			}
 		}
 	}
-
-	packages
-}
-
-#[tauri::command]
-pub async fn get_themes(
-) -> Vec<String> {
-
-	let theme_base = shellexpand::full("$POPATH/../themes").unwrap();
-
-	let theme_base = theme_base.trim();
-
-	let theme_base_path = PathBuf::from(theme_base);
-
-	let mut themes: Vec<String> = vec![];
-
-	let dir_entries = fs::read_dir(theme_base_path);
-
-	if let Ok(result_list) = dir_entries {
-
-		for entry in result_list.flatten() {
-
-			let meta = entry.metadata().unwrap();
-
-			if meta.is_dir() {
-
-				let name = entry.file_name();
-
-				themes.push(name.to_string_lossy().to_string());
-			}
-		}
-	}
-
+	
 	themes
 }
 
@@ -95,39 +102,44 @@ pub async fn get_repoes(
 	path: String
 ) -> Vec<Package> {
 
-	let git_base = shellexpand::full(&path).unwrap().to_string();
-
-	let git_base = git_base.trim();
-
-	let git_base_path = PathBuf::from(git_base);
+	let path_result = shellexpand::full(&path);
 
 	let mut repo_list: Vec<Package> = vec![];
 
-	let fs_result = fs::read_dir(git_base);
+	if let Ok(git_base) = path_result {
 
-	if let Ok(result_list) = fs_result {
+		let git_base = git_base.trim();
 
-		for dir_entry in result_list.flatten() {
+		let git_base_path = PathBuf::from(git_base);
 
-			let meta_data = dir_entry.metadata().unwrap();
+		
 
-			if meta_data.is_dir() {
+		let fs_result = fs::read_dir(git_base);
 
-				let mut git_dir = git_base_path.clone();
-				git_dir.push(dir_entry.file_name());
-				git_dir.push(".git");
+		if let Ok(result_list) = fs_result {
 
-				if git_dir.exists() {
+			for dir_entry in result_list.flatten() {
 
-					repo_list.push(Package{
-						name: dir_entry.file_name().to_string_lossy().to_string()
-					});
+				let meta_data = dir_entry.metadata().unwrap();
+
+				if meta_data.is_dir() {
+
+					let mut git_dir = git_base_path.clone();
+					git_dir.push(dir_entry.file_name());
+					git_dir.push(".git");
+
+					if git_dir.exists() {
+
+						repo_list.push(Package{
+							name: dir_entry.file_name().to_string_lossy().to_string()
+						});
+					}
 				}
 			}
 		}
+		
+		repo_list.sort();
 	}
-	
-	repo_list.sort();
 
 	repo_list
 }
@@ -138,7 +150,8 @@ pub async fn exporter(
 	args: ExportArgs
 ) {
 
-	run(args, &window);
+	run(args, &window).await;
+
 }
 
 #[tauri::command]
@@ -153,10 +166,11 @@ pub async fn builder(
 
 		all_build.build = String::from("all");
 
-		run(all_build, &window);
+		run(all_build, &window).await;
 	}
 	else {
-		run(args, &window);
+		run(args, &window).await;
+
 	}
 
 	window.emit("icebuilder-done", Payload {
@@ -172,7 +186,8 @@ pub async fn package(
 	args: PackageBuilderArgs
 ) {
 
-	run(args, &window);
+	run(args, &window).await;
+
 
 	window.emit("icebuilder-done", Payload {
 		update: false,
@@ -186,7 +201,8 @@ pub async fn sysmin(
     window: Window,
     args: SysminArgs
 ) {
-    run(args, &window);
+    run(args, &window).await;
+
     window.emit("sysmin-done", Payload {
         update: false,
         error: false,
@@ -210,7 +226,8 @@ pub async fn run_server(
 		format!("http://localhost:{server_port}")
 	};
 
-    run(args, &window);
+    run(args, &window).await;
+
     window.emit("server-done", Payload {
         update: false,
         error: false,
@@ -224,7 +241,8 @@ pub async fn create_theme(
 	args: ThemeArgs
 ) {
 
-	run(args, &window);
+	run(args, &window).await;
+
 
 	window.emit("creator-done", Payload {
 		update: false,
