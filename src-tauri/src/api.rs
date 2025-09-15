@@ -11,7 +11,7 @@ pub async fn packer(
 	args: PackerArgs
 ) {
 
-	run(args, &window).await;
+	let _ = run(args, &window).await;
 
 }
 
@@ -150,7 +150,7 @@ pub async fn exporter(
 	args: ExportArgs
 ) {
 
-	run(args, &window).await;
+	let _ = run(args, &window).await;
 
 }
 
@@ -166,10 +166,10 @@ pub async fn builder(
 
 		all_build.build = String::from("all");
 
-		run(all_build, &window).await;
+		let _ = run(all_build, &window).await;
 	}
 	else {
-		run(args, &window).await;
+		let _ = run(args, &window).await;
 
 	}
 
@@ -186,7 +186,7 @@ pub async fn package(
 	args: PackageBuilderArgs
 ) {
 
-	run(args, &window).await;
+	let _ = run(args, &window).await;
 
 
 	window.emit("icebuilder-done", Payload {
@@ -201,7 +201,7 @@ pub async fn sysmin(
     window: Window,
     args: SysminArgs
 ) {
-    run(args, &window).await;
+    let _ = run(args, &window).await;
 
     window.emit("sysmin-done", Payload {
         update: false,
@@ -226,7 +226,7 @@ pub async fn run_server(
 		format!("http://localhost:{server_port}")
 	};
 
-    run(args, &window).await;
+    let _ = run(args, &window).await;
 
     window.emit("server-done", Payload {
         update: false,
@@ -241,14 +241,16 @@ pub async fn create_theme(
 	args: ThemeArgs
 ) {
 
-	run(args, &window).await;
+	let result = run(args, &window).await;
+	
+	if result.is_ok() {
+		window.emit("creator-done", Payload {
+			update: false,
+			error: false,
+			message: "Done".to_string()
+		}).unwrap();
+	}
 
-
-	window.emit("creator-done", Payload {
-		update: false,
-		error: false,
-		message: "Done".to_string()
-	}).unwrap();
 }
 
 #[tauri::command]
