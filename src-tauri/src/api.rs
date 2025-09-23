@@ -250,7 +250,6 @@ pub async fn create_theme(
 			message: "Done".to_string()
 		}).unwrap();
 	}
-
 }
 
 #[tauri::command]
