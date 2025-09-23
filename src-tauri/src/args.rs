@@ -7,7 +7,7 @@ use zip::read::root_dir_common_filter;
 use crate::message::Payload;
 
 pub trait Handler {
-	fn run(&self, window: &Window) -> impl std::future::Future<Output = Result<(), bool>> + Send;
+	fn run(&self, window: &Window) -> impl std::future::Future<Output = ()> + Send;
 }
 
 
@@ -32,7 +32,7 @@ pub struct PackerArgs {
 }
 
 impl Handler for PackerArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -211,8 +211,6 @@ impl Handler for PackerArgs {
 		}).unwrap();
 
 		let _ = child.wait();
-
-		Ok(())
 	}
 }
 
@@ -234,7 +232,7 @@ pub struct ExportArgs {
 
 impl Handler for ExportArgs {
 	
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -298,7 +296,7 @@ impl Handler for ExportArgs {
 							message: "No package.json found for npm pack".to_string()
 						}).unwrap();
 
-						return Err(false);
+						return;
 					}
 			
 					if cfg!(target_os = "windows") {
@@ -432,8 +430,6 @@ impl Handler for ExportArgs {
 				message: "Need to chose a repo to export".to_string()
 			}).unwrap();
 		}
-
-		Ok(())
 	}
 }
 
@@ -453,7 +449,7 @@ pub struct IcecBuilderArgs {
 }
 
 impl Handler for IcecBuilderArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -585,8 +581,6 @@ impl Handler for IcecBuilderArgs {
 		}
 
 		let _ = child.wait();
-
-		Ok(())
 	}
 }
 
@@ -604,7 +598,7 @@ pub struct PackageBuilderArgs {
 }
 
 impl Handler for PackageBuilderArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -783,8 +777,6 @@ impl Handler for PackageBuilderArgs {
 		}
 
 		let _ = child.wait();
-
-		Ok(())
 	}
 }
 
@@ -798,7 +790,7 @@ pub struct ThemeArgs {
 }
 
 impl Handler for ThemeArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let theme_base = shellexpand::full(&self.path).unwrap();
 
@@ -806,15 +798,20 @@ impl Handler for ThemeArgs {
 
 		if self.create {
 
+			let app = window.app_handle();
+
 			let local_data_path = dirs::data_local_dir().unwrap();
+
+			let bin_path = app
+			.path_resolver()
+			.resolve_resource("bin")
+			.expect("Could not find directory");
 
 			let devx_path = local_data_path.join("devx");
 
-			let ext_file_path = devx_path.join("ext-6.6.0.zip");
+			let ext_path = devx_path.join("ext-6.6.0.zip");
 
-			let ext_folder_path = devx_path.join("ext-6.6.0");
-
-			if !&ext_file_path.exists() {
+			if !&ext_path.exists() {
 
 				if devx_path.exists() {
 					std::fs::remove_dir_all(&devx_path).unwrap();
@@ -832,99 +829,67 @@ impl Handler for ThemeArgs {
 
 				let address: Vec<_> = "webfiles.system-method.com:21".to_socket_addrs().unwrap().collect();
 
-				let mut ftp_stream = ftp::FtpStream::connect(address.get(0).unwrap()).unwrap();
+				let mut conn = ftp::FtpStream::connect(address.get(0).unwrap()).unwrap();
 
-				let login_result = ftp_stream.login("system-method.com", "2Fast4you");
+				let login_result = conn.login("system-method.com", "2Fast4you");
 
-				if login_result.is_ok() {
-
-					ftp_stream.transfer_type(ftp::types::FileType::Binary).unwrap();
+				if let Ok(_) = login_result {
 
 					let payload = Payload {
 						update: false,
 						error: false,
-						message: "Downloading: 0%\n".to_string()
+						message: "Donwloading zip file\n".to_string()
 					};
 
 					window.emit("creator-status", payload).unwrap();
-					
-					let server_file = "/webfiles/download/Tools/ext-6.6.0.zip";
+	
+					let payload = Payload {
+						update: false,
+						error: false,
+						message: "Bytes: 0\n".to_string()
+					};
 
-					let size = ftp_stream.size(server_file).unwrap().unwrap();
-					let ftp_error = Mutex::new(false);
+					window.emit("creator-status", payload).unwrap();
 
-					let _ = ftp_stream.retr(server_file, |stream| {
+					let _ = conn.retr("/webfiles/download/Tools/ext-6.6.0.zip", |stream| {
 
-						let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(&ext_file_path).unwrap();
+						let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(&ext_path).unwrap();
 						
-						let mut buffer = [0; 8192];
-						let mut currunt = 0;
+						let mut buffer = [0; 4096];
+						let mut size = 0;
 
 						loop {
 
-							let read_result = stream.read(&mut buffer[..]);
+							let result = stream.read(&mut buffer);
 
-							if let Ok(read_size) = read_result {
+							if let Ok(read_size) = result {
 
-								currunt += read_size;
-
-								let procentage = ((currunt as f64 / size as f64) * 100.0) as i32;
+								size = size + read_size;
 
 								if read_size == 0 {
 									break;
 								}
 								else {
 									
-									let write_result = file.write_all(&buffer[..read_size]);
+									let payload = Payload {
+										update: true,
+										error: false,
+										message: format!("Bytes: {size}\n").to_string()
+									};
+									
+									window.emit("creator-status", payload).unwrap();
 
-									if write_result.is_err() {
+									let _ = file.write_all(&buffer);
 
-										let error = write_result.err().unwrap();
+									buffer = [0; 4096];
 
-										let payload = Payload {
-											update: true,
-											error: false,
-											message: format!("Write Error: {error}\n").to_string()
-										};
-										
-										window.emit("creator-error", payload).unwrap();
-										
-										*ftp_error.lock().unwrap() = true;
-
-										break;
-									}
-
+									std::thread::sleep(time::Duration::from_millis(10));
 								}
-
-								let payload = Payload {
-									update: true,
-									error: false,
-									message: format!("Downloading: {procentage}%\n").to_string()
-								};
-								
-								window.emit("creator-status", payload).unwrap();
-
-								std::thread::sleep(time::Duration::from_millis(10));
-							}
-							else {
-								let error = read_result.err().unwrap();
-
-								let payload = Payload {
-									update: true,
-									error: false,
-									message: format!("Write Error: {error}\n").to_string()
-								};
-								
-								window.emit("creator-error", payload).unwrap();
 							}
 						}
 
 						Ok(())
 					});
-
-					if *ftp_error.lock().unwrap() {
-						return Err(false);
-					}
 
 					let payload = Payload {
 						update: false,
@@ -935,106 +900,31 @@ impl Handler for ThemeArgs {
 					window.emit("creator-status", payload).unwrap();
 
 				}
-				else {
-
-					let error = login_result.err().unwrap();
-					
-					let payload = Payload {
-						update:  false,
-						error: false,
-						message: format!("Error: {error}\n")
-					};
-
-					window.emit("creator-error", payload).unwrap();
-
-					return  Err(false);
-				}
-
-				ftp_stream.quit().unwrap();
 				
 				let payload = Payload {
 					update: false,
 					error: false,
-					message: "Unzipping ext-6.6.0\n".to_string()
+					message: "Extracting ext-6.6.0\n".to_string()
 				};
 
 				window.emit("creator-status", payload).unwrap();
 
 				let mut archive = zip::ZipArchive::new(
-					std::fs::File::open(&ext_file_path).unwrap()
+					std::fs::File::open(&ext_path).unwrap()
 				).unwrap();
 				
-				let unzip_result = archive.extract_unwrapped_root_dir(&ext_folder_path, root_dir_common_filter);
+				archive.extract_unwrapped_root_dir(&ext_path, root_dir_common_filter).unwrap();
 
-				if unzip_result.is_ok() {
+				let payload = Payload {
+					update: false,
+					error: false,
+					message: "Extraction complete\n".to_string()
+				};
 
-					let payload = Payload {
-						update: false,
-						error: false,
-						message: "Unzipping complete\n".to_string()
-					};
-
-					window.emit("creator-status", payload).unwrap();
-				}
-				else {
-					let error = unzip_result.err().unwrap();
-
-					let payload = Payload {
-						update: false,
-						error: true,
-						message: format!("Extraction error: {error}\n").to_string()
-					};
-
-					window.emit("creator-error", payload).unwrap();
-
-					return Err(false);
-				}
-			}
-			else {
-
-				if !ext_folder_path.exists() {
-
-					let payload = Payload {
-						update: false,
-						error: false,
-						message: "Unzipping ext-6.6.0\n".to_string()
-					};
-
-					window.emit("creator-status", payload).unwrap();
-
-					let mut archive = zip::ZipArchive::new(
-						std::fs::File::open(&ext_file_path).unwrap()
-					).unwrap();
-					
-					let unzip_result = archive.extract_unwrapped_root_dir(&ext_folder_path, root_dir_common_filter);
-
-					if unzip_result.is_ok() {
-
-						let payload = Payload {
-							update: false,
-							error: false,
-							message: "Unzipping complete\n".to_string()
-						};
-
-						window.emit("creator-status", payload).unwrap();
-					}
-					else {
-						let error = unzip_result.err().unwrap();
-
-						let payload = Payload {
-							update: false,
-							error: true,
-							message: format!("Extraction error: {error}\n").to_string()
-						};
-
-						window.emit("creator-error", payload).unwrap();
-
-						return Err(false);
-					}
-				}
+				window.emit("creator-status", payload).unwrap();
 			}
 
-			let mut str_ext_path = ext_folder_path.to_string_lossy().to_string();
+			let mut str_ext_path = ext_path.to_string_lossy().to_string();
 			str_ext_path = str_ext_path.replace("\\\\?", "");
 
 			let project_path = theme_path.clone().join(&self.name);
@@ -1058,165 +948,150 @@ impl Handler for ThemeArgs {
 			cmd.stdout(Stdio::piped());
 			cmd.stderr(Stdio::piped());
 
-			let spawn_result = cmd.spawn();
-
-			if let Ok(mut child) = spawn_result {
-				let stdout = child.stdout.take().unwrap();
-				let stderr = child.stderr.take().unwrap();
-				
-				let mut out_reader = BufReader::new(stdout);
-				let mut err_reader = BufReader::new(stderr);
+			let mut child = cmd.spawn().unwrap();
+		
+			let stdout = child.stdout.take().unwrap();
+			let stderr = child.stderr.take().unwrap();
 			
-				let mut vec_buf = [0; 1024];
-			
-				let mut last = "".to_string();
-				let mut update = false;
-			
-				loop {
+			let mut out_reader = BufReader::new(stdout);
+			let mut err_reader = BufReader::new(stderr);
+		
+			let mut vec_buf = [0; 1024];
+		
+			let mut last = "".to_string();
+			let mut update = false;
+		
+			loop {
 
-					let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
-					
-					if bytes == 0 {
-						break;
-					}
-
-					if bytes > 0 {
-
-						let slice = &vec_buf[..bytes];
-			
-						let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
-
-						if out_buffer.contains('\r') {
-							let temp: Vec<&str> = out_buffer.split('\r').collect();
-							out_buffer = temp.first().unwrap().to_string();
-						}
-
-						let first_temp: Vec<u8> = vec![27];
-						let first_str = String::from_utf8(first_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&first_str, "");
-
-						let second_temp: Vec<u8> = vec![91, 50, 65];
-						let second_str = String::from_utf8(second_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&second_str, "");
-
-						let last_temp: Vec<u8> = vec![91, 74];
-						let last_str = String::from_utf8(last_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&last_str, "");
-
-						if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
-							out_buffer += "\n";
-						}
-						
-						if !out_buffer.is_empty() && out_buffer != last {
+				let bytes = out_reader.read(&mut vec_buf).unwrap_or(0);
 				
-							std::thread::sleep(time::Duration::from_millis(10));
-
-							let payload = Payload {
-								update,
-								error: false,
-								message: out_buffer.clone()
-							};
-
-							update = false;
-
-							window.emit("creator-status", payload).unwrap();
-
-							last = out_buffer;				
-						}
-						else if out_buffer != "\n" {
-								update = true;
-						}
-
-						vec_buf = [0; 1024];
-					}
-				}
-				
-				vec_buf = [0; 1024];
-
-				
-				last = "".to_string();
-				update = false;
-
-				loop {
-
-					let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
-					
-					if bytes == 0 {
-						break;
-					}
-
-					if bytes > 0 {
-
-						let slice = &vec_buf[..bytes];
-			
-						let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
-
-						if out_buffer.contains('\r') {
-							let temp: Vec<&str> = out_buffer.split('\r').collect();
-							out_buffer = temp.first().unwrap().to_string();
-						}
-
-						let first_temp: Vec<u8> = vec![27];
-						let first_str = String::from_utf8(first_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&first_str, "");
-
-						let second_temp: Vec<u8> = vec![91, 50, 65];
-						let second_str = String::from_utf8(second_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&second_str, "");
-
-						let last_temp: Vec<u8> = vec![91, 74];
-						let last_str = String::from_utf8(last_temp).unwrap();
-
-						out_buffer = out_buffer.replace(&last_str, "");
-
-						if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
-							out_buffer += "\n";
-						}
-						
-						if !out_buffer.is_empty() && out_buffer != last {
-				
-							std::thread::sleep(time::Duration::from_millis(10));
-
-							let payload = Payload {
-								update,
-								error: false,
-								message: out_buffer.clone()
-							};
-
-							update = false;
-
-							window.emit("creator-status", payload).unwrap();
-
-							last = out_buffer;				
-						}
-						else if out_buffer != "\n" {
-								update = true;
-						}
-
-						vec_buf = [0; 1024];
-					}
+				if bytes == 0 {
+					break;
 				}
 
-				let _ = child.wait();
+				if bytes > 0 {
+
+					let slice = &vec_buf[..bytes];
+		
+					let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+					if out_buffer.contains('\r') {
+						let temp: Vec<&str> = out_buffer.split('\r').collect();
+						out_buffer = temp.first().unwrap().to_string();
+					}
+
+					let first_temp: Vec<u8> = vec![27];
+					let first_str = String::from_utf8(first_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&first_str, "");
+
+					let second_temp: Vec<u8> = vec![91, 50, 65];
+					let second_str = String::from_utf8(second_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&second_str, "");
+
+					let last_temp: Vec<u8> = vec![91, 74];
+					let last_str = String::from_utf8(last_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&last_str, "");
+
+					if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+						out_buffer += "\n";
+					}
+					
+					if !out_buffer.is_empty() && out_buffer != last {
+			
+						std::thread::sleep(time::Duration::from_millis(10));
+
+						let payload = Payload {
+							update,
+							error: false,
+							message: out_buffer.clone()
+						};
+
+						update = false;
+
+						window.emit("creator-status", payload).unwrap();
+
+						last = out_buffer;				
+					}
+					else if out_buffer != "\n" {
+							update = true;
+					}
+
+					vec_buf = [0; 1024];
+				}
 			}
-			else {
-				let error = spawn_result.err().unwrap();
+			
+			vec_buf = [0; 1024];
 
-				let payload = Payload {
-					update:  false,
-					error: false,
-					message: format!("Error: {error}\n")
-				};
+			
+			last = "".to_string();
+			update = false;
 
-				window.emit("creator-error", payload).unwrap();
+			loop {
 
-				return  Err(false);
+				let bytes = err_reader.read(&mut vec_buf).unwrap_or(0);
+				
+				if bytes == 0 {
+					break;
+				}
+
+				if bytes > 0 {
+
+					let slice = &vec_buf[..bytes];
+		
+					let mut out_buffer = std::str::from_utf8(slice).unwrap().to_string();
+
+					if out_buffer.contains('\r') {
+						let temp: Vec<&str> = out_buffer.split('\r').collect();
+						out_buffer = temp.first().unwrap().to_string();
+					}
+
+					let first_temp: Vec<u8> = vec![27];
+					let first_str = String::from_utf8(first_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&first_str, "");
+
+					let second_temp: Vec<u8> = vec![91, 50, 65];
+					let second_str = String::from_utf8(second_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&second_str, "");
+
+					let last_temp: Vec<u8> = vec![91, 74];
+					let last_str = String::from_utf8(last_temp).unwrap();
+
+					out_buffer = out_buffer.replace(&last_str, "");
+
+					if !out_buffer.is_empty() && !out_buffer.ends_with('\n') {
+						out_buffer += "\n";
+					}
+					
+					if !out_buffer.is_empty() && out_buffer != last {
+			
+						std::thread::sleep(time::Duration::from_millis(10));
+
+						let payload = Payload {
+							update,
+							error: false,
+							message: out_buffer.clone()
+						};
+
+						update = false;
+
+						window.emit("creator-status", payload).unwrap();
+
+						last = out_buffer;				
+					}
+					else if out_buffer != "\n" {
+							update = true;
+					}
+
+					vec_buf = [0; 1024];
+				}
 			}
+
+			let _ = child.wait();
 		}
 		else {
 			let project_path = theme_path.clone().join(&self.project);
@@ -1398,10 +1273,9 @@ impl Handler for ThemeArgs {
 				}
 
 				let _ = child.wait();
+
 			}
 		}
-
-		Ok(())
 	}
 }
 
@@ -1411,7 +1285,7 @@ pub struct SysminArgs {
 }
 
 impl Handler for SysminArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let app = window.app_handle();
 
@@ -1582,8 +1456,6 @@ impl Handler for SysminArgs {
 		}
 
 		let _ = child.try_wait();
-
-		Ok(())
 	}
 }
 
@@ -1598,7 +1470,7 @@ pub struct ServerArgs {
 }
 
 impl Handler for ServerArgs {
-	async fn run(&self, window: &Window) -> Result<(), bool> {
+	async fn run(&self, window: &Window) {
 
 		let server_base = shellexpand::full(&self.path.clone()).unwrap().to_string();
 
@@ -1820,12 +1692,10 @@ impl Handler for ServerArgs {
 
 			let _ = child.try_wait();
 		});
-
-		Ok(())
 	}
 }
 
-pub async fn run<T>(args: T, window: &Window) -> Result<(), bool>
+pub async fn run<T>(args: T, window: &Window) 
 where T: Handler{
-	args.run(window).await
+	args.run(window).await;
 }
