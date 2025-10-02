@@ -22,7 +22,7 @@ shellexpand = "3.1.0"
 sysinfo = "0.35.2"
 dirs = "6.0.0"
 zip = "4.2.0"
-ftp = "3.0.1"
+suppaftp = "7.0.4"
 
 [features]
 # by default Tauri runs in production mode

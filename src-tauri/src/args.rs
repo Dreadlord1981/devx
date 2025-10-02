@@ -832,13 +832,13 @@ impl Handler for ThemeArgs {
 
 				let address: Vec<_> = "webfiles.system-method.com:21".to_socket_addrs().unwrap().collect();
 
-				let mut ftp_stream = ftp::FtpStream::connect(address.get(0).unwrap()).unwrap();
+				let mut ftp_stream = suppaftp::FtpStream::connect(address.get(0).unwrap()).unwrap();
 
 				let login_result = ftp_stream.login("system-method.com", "2Fast4you");
 
 				if login_result.is_ok() {
 
-					ftp_stream.transfer_type(ftp::types::FileType::Binary).unwrap();
+					ftp_stream.transfer_type(suppaftp::types::FileType::Binary).unwrap();
 
 					let payload = Payload {
 						update: false,
@@ -850,7 +850,7 @@ impl Handler for ThemeArgs {
 					
 					let server_file = "/webfiles/download/Tools/ext-6.6.0.zip";
 
-					let size = ftp_stream.size(server_file).unwrap().unwrap();
+					let size = ftp_stream.size(server_file).unwrap();
 					let ftp_error = Mutex::new(false);
 
 					let _ = ftp_stream.retr(server_file, |stream| {
@@ -990,47 +990,44 @@ impl Handler for ThemeArgs {
 					return Err(false);
 				}
 			}
-			else {
+			else if !ext_folder_path.exists() {
 
-				if !ext_folder_path.exists() {
+				let payload = Payload {
+					update: false,
+					error: false,
+					message: "Unzipping ext-6.6.0\n".to_string()
+				};
+
+				window.emit("creator-status", payload).unwrap();
+
+				let mut archive = zip::ZipArchive::new(
+					std::fs::File::open(&ext_file_path).unwrap()
+				).unwrap();
+				
+				let unzip_result = archive.extract_unwrapped_root_dir(&ext_folder_path, root_dir_common_filter);
+
+				if unzip_result.is_ok() {
 
 					let payload = Payload {
 						update: false,
 						error: false,
-						message: "Unzipping ext-6.6.0\n".to_string()
+						message: "Unzipping complete\n".to_string()
 					};
 
 					window.emit("creator-status", payload).unwrap();
+				}
+				else {
+					let error = unzip_result.err().unwrap();
 
-					let mut archive = zip::ZipArchive::new(
-						std::fs::File::open(&ext_file_path).unwrap()
-					).unwrap();
-					
-					let unzip_result = archive.extract_unwrapped_root_dir(&ext_folder_path, root_dir_common_filter);
+					let payload = Payload {
+						update: false,
+						error: true,
+						message: format!("Extraction error: {error}\n").to_string()
+					};
 
-					if unzip_result.is_ok() {
+					window.emit("creator-error", payload).unwrap();
 
-						let payload = Payload {
-							update: false,
-							error: false,
-							message: "Unzipping complete\n".to_string()
-						};
-
-						window.emit("creator-status", payload).unwrap();
-					}
-					else {
-						let error = unzip_result.err().unwrap();
-
-						let payload = Payload {
-							update: false,
-							error: true,
-							message: format!("Extraction error: {error}\n").to_string()
-						};
-
-						window.emit("creator-error", payload).unwrap();
-
-						return Err(false);
-					}
+					return Err(false);
 				}
 			}
 
