@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
-import Navigation from "./Navigation";
 import Toolbar from "./Toolbar";
-
 
 function Server(props) {
 
@@ -13,12 +11,12 @@ function Server(props) {
 	let server = state.server;
 	let config = state.config;
 	let cache = state.cache;
-
+	let setWorking = props.setWorking;
 
 	const logRef = useRef(null);
 	const inputRef = useRef(null);
 
-	const [working, setWorking] = useState(false);
+	const [internalWorking, setInternalWorking] = useState(false);
 	const [log, setLog] = useState("");
 
 	function isSelected(s_value) {
@@ -41,7 +39,7 @@ function Server(props) {
 
 			a_lines = a_lines.filter(Boolean)
 
-			if(a_lines[a_lines.length -1] != "") {
+			if (a_lines[a_lines.length - 1] != "") {
 				a_lines.pop();
 				a_lines.push(o_payload.message);
 			}
@@ -58,6 +56,7 @@ function Server(props) {
 		setLog(s_result);
 
 		if (b_done) {
+			setInternalWorking(false);
 			setWorking(false);
 		}
 
@@ -73,26 +72,27 @@ function Server(props) {
 		let serverSelected = false;
 		let configSelected = false;
 
-		servers.forEach(function(o_sever) {
+		servers.forEach(function (o_sever) {
 
 			if (!serverSelected) {
 				serverSelected = isSelected(o_sever.name);
 			}
 		});
 
-		configs.forEach(function(o_config) {
+		configs.forEach(function (o_config) {
 
 			if (!configSelected) {
 				configSelected = isConfigSelected(o_config.name);
 			}
 		});
 
-		return serverSelected && configSelected;
+		return serverSelected && configSelected && !internalWorking;
 	}
 
 	async function onClick() {
 
 		setLog("")
+		setInternalWorking(true);
 		setWorking(true);
 
 		let o_args = {
@@ -102,8 +102,6 @@ function Server(props) {
 			server: state.server,
 			https: state.https,
 			cache: state.cache
-
-
 		};
 
 		await invoke("run_server", {
@@ -116,117 +114,115 @@ function Server(props) {
 		setLog("");
 	}
 
-	useEffect(function() {
+	useEffect(function () {
 
-		let i_promise = invoke("update_title", {title: "Server manager"});
+		invoke("update_title", { title: "Server manager" });
 
-		if (inputRef) {
+		if (inputRef.current) {
 			inputRef.current.focus();
 		}
 
-		let status = appWindow.listen("server-status", function(i_response) {
+		let status = appWindow.listen("server-status", function (i_response) {
 
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload);
 		});
 
-		let error = appWindow.listen("server-error", function(i_response) {
+		let error = appWindow.listen("server-error", function (i_response) {
 
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload, true);
 		});
 
-		let done = appWindow.listen("server-done", function(i_response) {
-			
+		let done = appWindow.listen("server-done", function (i_response) {
+
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload, true);
 		});
 
-		const scrollHeight = logRef.current.scrollHeight;
-		const height = logRef.current.clientHeight;
-		const maxScrollTop = scrollHeight - height;
-		logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		if (logRef.current) {
+			const scrollHeight = logRef.current.scrollHeight;
+			const height = logRef.current.clientHeight;
+			const maxScrollTop = scrollHeight - height;
+			logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		}
 
 		return () => {
-			status.then(function(f_callback) {
+			status.then(function (f_callback) {
 				f_callback();
 			});
 
-			error.then(function(f_callback) {
+			error.then(function (f_callback) {
 				f_callback();
 			});
 
-			done.then(function(f_callback) {
+			done.then(function (f_callback) {
 				f_callback();
 			});
 		}
 	}, [log])
 
 	return (
-		<>
-			<Navigation active={"server"} working={false}/>
-			<div className="container">
-				<div className="layout-hbox flex">
-					<div className="form flex">
-						<fieldset>
-							<legend>Server</legend>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="path">Path:</label>
-								<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.path} name="path"></input>
-							</div>
-						</fieldset>
-						{servers.length > 0 &&
-							<fieldset className="overflow-auto max-height">
-								<legend>Servers</legend>
-								{
-									servers.map(function(o_config) {
-										return <div key={o_config.name} className="field-wrapper">
-											<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onServerChange} className="field-input maring-right-20" name={o_config.name}></input>
-											<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
-										</div>
-									})
-								}
-							</fieldset>
-						}
-						{configs.length > 0 &&
-							<fieldset className="flex overflow-auto">
-								<legend>Configs</legend>
-								{
-									configs.map(function(o_config) {
-										return <div key={o_config.name} className="field-wrapper">
-											<input type="checkbox" checked={isConfigSelected(o_config.name)} onChange={props.onConfigChange} className="field-input maring-right-20" name={o_config.name} port={o_config.port} mode={o_config.https ? 1 : 0}></input>
-											<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
-										</div>
-									})
-								}
-							</fieldset>
-						}
-						<fieldset>
-                            <legend>Caching</legend>
-                            <div className="field-wrapper">
-                                <label className="field-label" htmlFor="no-cache-input">No cache:</label>
-                                <input type="radio" checked={isCacheSelected(false)} className="field-input" onChange={props.onServerCacheChange} id="no-cache-input" value="0" name="cache"></input>
-                            </div>
-                            <div className="field-wrapper">
-                                <label className="field-label" htmlFor="cache-input">Cache:</label>
-                                <input type="radio" checked={isCacheSelected(true)} className="field-input" onChange={props.onServerCacheChange} id="cache-input" value="1" name="cache"></input>
-                            </div>
-                        </fieldset>
-					</div>
-					<div className="layout-fit flex">
-						<div className="output flex" ref={logRef}>
-							<pre>
-								{log}
-							</pre>
+		<div className="container">
+			<div className="content-wrapper">
+				<div className="form-area">
+					<fieldset disabled={internalWorking}>
+						<legend>Server</legend>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="path">Path:</label>
+							<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.path} name="path"></input>
 						</div>
+					</fieldset>
+					{servers.length > 0 &&
+						<fieldset disabled={internalWorking}>
+							<legend>Servers</legend>
+							{
+								servers.map(function (o_config) {
+									return <div key={o_config.name} className="field-wrapper">
+										<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
+										<input type="checkbox" checked={isSelected(o_config.name)} onChange={props.onServerChange} className="field-input" name={o_config.name}></input>
+									</div>
+								})
+							}
+						</fieldset>
+					}
+					{configs.length > 0 &&
+						<fieldset disabled={internalWorking}>
+							<legend>Configs</legend>
+							{
+								configs.map(function (o_config) {
+									return <div key={o_config.name} className="field-wrapper">
+										<label className="field-label" htmlFor={o_config.name}>{o_config.name}</label>
+										<input type="checkbox" checked={isConfigSelected(o_config.name)} onChange={props.onConfigChange} className="field-input" name={o_config.name} port={o_config.port} mode={o_config.https ? 1 : 0}></input>
+									</div>
+								})
+							}
+						</fieldset>
+					}
+					<fieldset disabled={internalWorking}>
+						<legend>Caching</legend>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="no-cache-input">No cache:</label>
+							<input type="radio" checked={isCacheSelected(false)} className="field-input" onChange={props.onServerCacheChange} id="no-cache-input" value="0" name="cache"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="cache-input">Cache:</label>
+							<input type="radio" checked={isCacheSelected(true)} className="field-input" onChange={props.onServerCacheChange} id="cache-input" value="1" name="cache"></input>
+						</div>
+					</fieldset>
+				</div>
+				<div className="output-area">
+					<div className="output-header">Logs</div>
+					<div className="output" ref={logRef}>
+						<pre>{log}</pre>
 					</div>
 				</div>
-				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
-		</>
+			<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()} />
+		</div>
 	);
 }
 

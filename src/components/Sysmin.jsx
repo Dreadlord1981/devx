@@ -1,134 +1,122 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
-import Navigation from "./Navigation";
 import Toolbar from "./Toolbar";
 
 function Sysmin(props) {
 
-    let state = props.state
-    let options = props.options || [];
+	let state = props.state
+	let setWorking = props.setWorking;
 
-    const logRef = useRef(null);
-    const [working, setWorking] = useState(false);
-    const [log, setLog] = useState("");
+	const logRef = useRef(null);
+	const [internalWorking, setInternalWorking] = useState(false);
+	const [log, setLog] = useState("");
 
-    function updatestatus(o_payload, b_done) {
-        let s_result = o_payload.message;
-        if (o_payload.update) {
-            var a_lines = log.split("\n");
-            a_lines = a_lines.filter(Boolean)
-            if(a_lines[a_lines.length -1] != "") {
-                a_lines.pop();
-                a_lines.push(o_payload.message);
-            }
-            s_result = a_lines.join("\n");
-        }
-        else {
-            s_result = [
-                log,
-                s_result
-            ].join("")
-        }
-        setLog(s_result);
-        if (b_done) {
-            setWorking(false);
-        }
-    }
+	function updatestatus(o_payload, b_done) {
+		let s_result = o_payload.message;
+		if (o_payload.update) {
+			var a_lines = log.split("\n");
+			a_lines = a_lines.filter(Boolean)
+			if (a_lines[a_lines.length - 1] != "") {
+				a_lines.pop();
+				a_lines.push(o_payload.message);
+			}
+			s_result = a_lines.join("\n");
+		}
+		else {
+			s_result = [
+				log,
+				s_result
+			].join("")
+		}
+		setLog(s_result);
+		if (b_done) {
+			setInternalWorking(false);
+			setWorking(false);
+		}
+	}
 
-    async function onClick() {
-        setLog("")
-        setWorking(true);
-        let o_args = {
-            ...state
-        };
-        await invoke("sysmin", {
-            args: o_args
-        });
-    }
-	
-    async function onClearClick() {
-        setLog("");
-    }
+	async function onClick() {
+		setLog("")
+		setInternalWorking(true);
+		setWorking(true);
+		let o_args = {
+			...state
+		};
+		await invoke("sysmin", {
+			args: o_args
+		});
+	}
 
-    useEffect(function() {
+	async function onClearClick() {
+		setLog("");
+	}
 
-        let i_promise = invoke("update_title", {title: "System minifier"});
+	useEffect(function () {
 
-        let status = appWindow.listen("sysmin-status", function(i_response) {
-            let o_payload = i_response.payload;
-            updatestatus(o_payload);
-        });
+		invoke("update_title", { title: "System minifier" });
 
-        let error = appWindow.listen("sysmin-error", function(i_response) {
-            let o_payload = i_response.payload;
-            updatestatus(o_payload, true);
-        });
+		let status = appWindow.listen("sysmin-status", function (i_response) {
+			let o_payload = i_response.payload;
+			updatestatus(o_payload);
+		});
 
-        let done = appWindow.listen("sysmin-done", function(i_response) {
-            let o_payload = i_response.payload;
-            updatestatus(o_payload, true);
-        });
+		let error = appWindow.listen("sysmin-error", function (i_response) {
+			let o_payload = i_response.payload;
+			updatestatus(o_payload, true);
+		});
 
-        const scrollHeight = logRef.current.scrollHeight;
-        const height = logRef.current.clientHeight;
-        const maxScrollTop = scrollHeight - height;
+		let done = appWindow.listen("sysmin-done", function (i_response) {
+			let o_payload = i_response.payload;
+			updatestatus(o_payload, true);
+		});
 
-        logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		if (logRef.current) {
+			const scrollHeight = logRef.current.scrollHeight;
+			const height = logRef.current.clientHeight;
+			const maxScrollTop = scrollHeight - height;
+			logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		}
 
-        return () => {
-            status.then(function(f_callback) {
-                f_callback();
-            });
-            error.then(function(f_callback) {
-                f_callback();
-            });
-            done.then(function(f_callback) {
-                f_callback();
-            });
-        }
+		return () => {
+			status.then(function (f_callback) {
+				f_callback();
+			});
+			error.then(function (f_callback) {
+				f_callback();
+			});
+			done.then(function (f_callback) {
+				f_callback();
+			});
+		}
 
-    }, [log])
+	}, [log])
 
-    let portfolio = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system"></input>;
-    let icecap = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-i" value="i" name="system"></input>;
-
-    if (state.system == "i") {
-        icecap = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-i" value="i" name="system" checked></input>
-    }
-    if (state.system == "p") {
-        portfolio = <input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system" checked></input>
-    }
-	
-    return (
-        <>
-            <Navigation active={"sysmin"} working={working}/>
-            <div className="container">
-                <div className="layout-hbox flex">
-                    <div className="form flex">
-                        <fieldset disabled={working}>
-                            <legend>System</legend>
-                            <div className="field-wrapper">
-                                <label className="field-label" htmlFor="system-i">Icecap:</label>
-                                {icecap}
-                            </div>
-                            <div className="field-wrapper">
-                                <label className="field-label" htmlFor="system-p">Portfolio:</label>
-                                {portfolio}
-                            </div>
-                        </fieldset>
-                    </div>
-                    <div className="layout-fit flex">
-                        <div className="output flex" ref={logRef}>
-                            <pre>
-                                {log}
-                            </pre>
-                        </div>
-                    </div>
-                </div>
-               <Toolbar onClearClick={onClearClick} onClick={onClick} valid={!working}/>
-            </div>
-        </>
-    );
+	return (
+		<div className="container">
+			<div className="content-wrapper">
+				<div className="form-area">
+					<fieldset disabled={internalWorking}>
+						<legend>System</legend>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="system-i">Icecap:</label>
+							<input type="radio" className="field-input" onChange={props.onInputChange} id="system-i" value="i" name="system" checked={state.system === "i"}></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="system-p">Portfolio:</label>
+							<input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system" checked={state.system === "p"}></input>
+						</div>
+					</fieldset>
+				</div>
+				<div className="output-area">
+					<div className="output-header">Logs</div>
+					<div className="output" ref={logRef}>
+						<pre>{log}</pre>
+					</div>
+				</div>
+			</div>
+			<Toolbar onClearClick={onClearClick} onClick={onClick} valid={!internalWorking} />
+		</div>
+	);
 }
 export default Sysmin;

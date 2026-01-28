@@ -15,6 +15,9 @@
       "shell": {
         "all": false,
         "open": true
+      },
+      "window": {
+        "all": true
       }
     },
     "bundle": {
@@ -62,7 +65,20 @@
         "height": 900,
         "resizable": true,
         "title": "Developer tools",
-        "width": 1280
+        "width": 1280,
+        "visible": false,
+        "label": "main"
+      },
+      {
+        "width": 600,
+        "height": 400,
+        "decorations": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "center": true,
+        "transparent": true,
+        "label": "splashscreen",
+        "url": "splash.html"
       }
     ]
   }

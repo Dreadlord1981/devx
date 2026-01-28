@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
-import Navigation from "./Navigation";
 import Toolbar from "./Toolbar";
-
 
 function Builder(props) {
 
 	let state = props.state
 	let options = props.options || [];
+	let setWorking = props.setWorking;
 
 	const logRef = useRef(null);
 	const inputRef = useRef(null);
 
-	const [working, setWorking] = useState(false);
+	const [internalWorking, setInternalWorking] = useState(false);
 	const [log, setLog] = useState("");
 
 	function updatestatus(o_payload, b_done) {
@@ -26,7 +25,7 @@ function Builder(props) {
 
 			a_lines = a_lines.filter(Boolean)
 
-			if(a_lines[a_lines.length -1] != "") {
+			if (a_lines[a_lines.length - 1] != "") {
 				a_lines.pop();
 				a_lines.push(o_payload.message);
 			}
@@ -43,6 +42,7 @@ function Builder(props) {
 		setLog(s_result);
 
 		if (b_done) {
+			setInternalWorking(false);
 			setWorking(false);
 		}
 
@@ -64,12 +64,13 @@ function Builder(props) {
 			valid = true;
 		}
 
-		return valid && !working;
+		return valid && !internalWorking;
 	}
 
 	async function onClick() {
 
 		setLog("")
+		setInternalWorking(true);
 		setWorking(true);
 
 		let o_args = {
@@ -86,121 +87,119 @@ function Builder(props) {
 		setLog("");
 	}
 
-	useEffect(function() {
+	useEffect(function () {
 
-		let i_promise = invoke("update_title", {title: "Capdev builder"});
+		invoke("update_title", { title: "Capdev builder" });
 
-		if (inputRef) {
+		if (inputRef.current) {
 			inputRef.current.focus();
 		}
 
-		let status = appWindow.listen("icebuilder-status", function(i_response) {
+		let status = appWindow.listen("icebuilder-status", function (i_response) {
 
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload);
 		});
 
-		let error = appWindow.listen("icebuilder-error", function(i_response) {
+		let error = appWindow.listen("icebuilder-error", function (i_response) {
 
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload, true);
 		});
 
-		let done = appWindow.listen("icebuilder-done", function(i_response) {
-			
+		let done = appWindow.listen("icebuilder-done", function (i_response) {
+
 			let o_payload = i_response.payload;
 
 			updatestatus(o_payload, true);
 		});
 
-		const scrollHeight = logRef.current.scrollHeight;
-		const height = logRef.current.clientHeight;
-		const maxScrollTop = scrollHeight - height;
-		logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		if (logRef.current) {
+			const scrollHeight = logRef.current.scrollHeight;
+			const height = logRef.current.clientHeight;
+			const maxScrollTop = scrollHeight - height;
+			logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		}
 
 		return () => {
-			status.then(function(f_callback) {
+			status.then(function (f_callback) {
 				f_callback();
 			});
 
-			error.then(function(f_callback) {
+			error.then(function (f_callback) {
 				f_callback();
 			});
 
-			done.then(function(f_callback) {
+			done.then(function (f_callback) {
 				f_callback();
 			});
 		}
 	}, [log])
 
 	return (
-		<>
-			<Navigation active={"builder"} working={working}/>
-			<div className="container">
-				<div className="layout-hbox flex">
-					<div className="form flex">
-						<fieldset disabled={working}>
-							<legend>Info</legend>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="build">Type:</label>
-								<select className="field-input" onChange={props.onInputChange} value={state.type} name="build">
-									{options.length > 0 &&
-										options.map(function(o_config) {
-											return <option key={o_config.value} value={o_config.value} selected={o_config.selected}>{o_config.label}</option>
-										})
-									}
-								</select>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="target">Target:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.target} name="target"></input>
-							</div>
-						</fieldset>
-						<fieldset disabled={working}>
-							<legend>Server</legend>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="host">Host:</label>
-								<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.host} name="host"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="user">User:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.user} name="user"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="password">Password:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.password} type="password" name="password"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="ifs">IFS:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.ifs} name="ifs"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="deploy">Deploy library:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.deploy} name="deploy"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="bin">Bin library:</label>
-								<input className="field-input" onChange={props.onInputChange} value={state.bin} name="bin"></input>
-							</div>
-							<div className="field-wrapper">
-								<label className="field-label" htmlFor="release">Release:</label>
-								<input type="checkbox" onChange={props.onInputChange} checked={state.release} className="field-input" name="release"></input>
-							</div>
-						</fieldset>
-					</div>
-					<div className="layout-fit flex">
-						<div className="output flex" ref={logRef}>
-							<pre>
-								{log}
-							</pre>
+		<div className="container">
+			<div className="content-wrapper">
+				<div className="form-area">
+					<fieldset disabled={internalWorking}>
+						<legend>Info</legend>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="build">Type:</label>
+							<select className="field-input" onChange={props.onInputChange} value={state.type} name="build">
+								{options.length > 0 &&
+									options.map(function (o_config) {
+										return <option key={o_config.value} value={o_config.value} selected={o_config.selected}>{o_config.label}</option>
+									})
+								}
+							</select>
 						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="target">Target:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.target} name="target"></input>
+						</div>
+					</fieldset>
+					<fieldset disabled={internalWorking}>
+						<legend>Server</legend>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="host">Host:</label>
+							<input className="field-input" ref={inputRef} onChange={props.onInputChange} value={state.host} name="host"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="user">User:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.user} name="user"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="password">Password:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.password} type="password" name="password"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="ifs">IFS:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.ifs} name="ifs"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="deploy">Deploy library:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.deploy} name="deploy"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="bin">Bin library:</label>
+							<input className="field-input" onChange={props.onInputChange} value={state.bin} name="bin"></input>
+						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="release">Release:</label>
+							<input type="checkbox" onChange={props.onInputChange} checked={state.release} className="field-input" name="release"></input>
+						</div>
+					</fieldset>
+				</div>
+				<div className="output-area">
+					<div className="output-header">Logs</div>
+					<div className="output" ref={logRef}>
+						<pre>{log}</pre>
 					</div>
 				</div>
-				<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()}/>
 			</div>
-		</>
+			<Toolbar onClearClick={onClearClick} onClick={onClick} valid={isValid()} />
+		</div>
 	);
 }
 

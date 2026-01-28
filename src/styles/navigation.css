@@ -1,84 +1,85 @@
-.menu {
-	list-style: none;
-	margin: 10px;
-	padding: 0;
+.sidebar {
+	width: var(--sidebar-width);
+	background: var(--sidebar-bg);
+	backdrop-filter: blur(8px);
+	-webkit-backdrop-filter: blur(8px);
+	border-right: 1px solid var(--border-color);
 	display: flex;
 	flex-direction: column;
+	transition: width 0.3s ease;
+	height: 100vh;
+}
+
+.sidebar-header {
+	padding: 24px;
+	display: flex;
 	align-items: center;
-	background: rgb(255, 255, 255, 0.1);
-    backdrop-filter: blur(1rem);
-	box-shadow: 0 0 1rem rgba(0, 0, 0, 0.2);
-	border: 1px solid rgba(255,255,255,0.25);
+	justify-content: center;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.logo {
+	font-size: 1.5rem;
+	font-weight: 700;
+	background: linear-gradient(135deg, var(--accent-color), #3b82f6);
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	letter-spacing: -0.05em;
+}
+
+.menu {
+	list-style: none;
+	margin: 0;
+	padding: 16px 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	background: transparent;
+	box-shadow: none;
+	border: none;
 }
 
 .menu-item {
-	padding: 10px;
-	background-color: #052a7b;
-	color: white;
-	margin-top: 10px;
-	margin-left: 10px;
-	margin-right: 10px;
-	cursor: pointer;
-	border-radius: 5px;
-	width: 24px;
-	height: 24px;
 	display: flex;
-	justify-content: center;
 	align-items: center;
-	transition: all 250ms;
-}
-
-.menu-item.selected {
-	background-color: #6facf1;
+	padding: 12px 16px;
+	color: var(--text-secondary);
+	border-radius: 8px;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	gap: 12px;
+	width: auto;
+	height: auto;
 }
 
 .menu-item:hover {
-	background-color: #6facf1;
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--text-primary);
 }
 
-.menu-item a {
+.menu-item.selected {
+	background: var(--accent-color);
 	color: white;
-	text-decoration: none;
+	box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
-.menu-item-disabled {
+.menu-item.disabled {
+	opacity: 0.5;
 	pointer-events: none;
-	opacity: 0.6;
+}
+
+.menu-icon {
+	flex-shrink: 0;
+}
+
+.menu-text {
+	font-weight: 500;
+	font-size: 0.95rem;
 }
 
 @media (prefers-color-scheme: dark) {
-
-	.menu {
-		background-color: var(--menu-color);
-	}
-	
-	.menu-item {
-		padding: 10px;
-		background-color: var(--primary-color);
-		color: var(--color);
-		margin-top: 10px;
-		margin-left: 10px;
-		margin-right: 10px;
-		cursor: pointer;
-		border-radius: 5px;
-		width: 24px;
-		height: 24px;
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		transition: all 250ms;
-	}
-	
-	.menu-item.selected {
-		background-color: var(--hover-color);
-	}
-	
 	.menu-item:hover {
-		background-color: var(--hover-color);
-	}
-	
-	.menu-item a {
-		color: var(--color);
-		text-decoration: none;
+		background: rgba(255, 255, 255, 0.05);
 	}
 }
