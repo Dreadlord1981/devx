@@ -95,7 +95,14 @@ function Navigation({ active, working, collapsed, onToggle }) {
 
 	return (
 		<nav className="sidebar">
-			<div className="sidebar-header" onClick={onToggle} style={{ cursor: 'pointer' }} title={collapsed ? "Expand" : "Collapse"}>
+			<div
+				className="sidebar-header"
+				onClick={onToggle}
+				onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onToggle()}
+				tabIndex="0"
+				style={{ cursor: 'pointer' }}
+				title={collapsed ? "Expand" : "Collapse"}
+			>
 				<img src="/assets/logo.png" alt="Logo" style={{ width: '32px', height: '32px', marginRight: collapsed ? '0' : '10px', transition: 'margin 0.3s' }} />
 				{!collapsed && (
 					<>
@@ -114,6 +121,8 @@ function Navigation({ active, working, collapsed, onToggle }) {
 							key={link.id}
 							className={getLinkClass(link.id)}
 							onClick={() => onLinkClick(link.link)}
+							onKeyDown={(e) => e.key === "Enter" && onLinkClick(link.link)}
+							tabIndex="0"
 							title={collapsed ? `${link.text} (Alt+${link.key.toUpperCase()})` : ""}
 						>
 							<Icon size={20} className="menu-icon" />

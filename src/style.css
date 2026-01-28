@@ -131,6 +131,18 @@ body {
 	box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
 }
 
+.menu-item:focus-visible {
+	outline: 2px solid var(--primary-color);
+	outline-offset: -2px;
+	background: var(--surface-light);
+}
+
+.menu-item.selected:focus-visible {
+	outline: 2px solid rgba(255, 255, 255, 0.5);
+	outline-offset: -4px;
+	background: var(--primary-gradient);
+}
+
 .menu-item.disabled {
 	opacity: 0.5;
 	pointer-events: none;
@@ -147,6 +159,12 @@ body {
 }
 
 .sidebar-header:hover {
+	background: var(--surface-light);
+}
+
+.sidebar-header:focus-visible {
+	outline: 2px solid var(--primary-color);
+	outline-offset: -2px;
 	background: var(--surface-light);
 }
 
@@ -285,7 +303,15 @@ legend {
 .field-input:focus {
 	outline: none;
 	border-color: var(--primary-color);
-	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+	background: var(--surface-main);
+	box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
+}
+
+.field-input[type="checkbox"]:focus-visible,
+.field-input[type="radio"]:focus-visible {
+	outline: 2px solid var(--primary-color);
+	outline-offset: 4px;
+	box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
 .field-input[type="checkbox"],
@@ -304,37 +330,54 @@ button {
 	align-items: center;
 	justify-content: center;
 	gap: 10px;
-	padding: 8px 16px;
-	border-radius: var(--radius-sm);
+	padding: 8px 24px;
+	border-radius: var(--radius-md);
 	font-weight: 600;
 	font-size: 13px;
 	cursor: pointer;
-	transition: all 0.2s ease;
+	transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 	border: 1px solid var(--border-color);
 	background: var(--surface-main);
 	color: var(--text-main);
+	position: relative;
+	overflow: hidden;
 }
 
-button:hover:not(:disabled) {
+button:hover:not(:disabled):not(.primary) {
 	background: var(--surface-light);
 	border-color: var(--primary-color);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 button.primary {
 	background: var(--primary-gradient);
 	border: none;
 	color: white;
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 button.primary:hover:not(:disabled) {
-	filter: brightness(1.1);
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+	filter: brightness(1.05);
+	transform: translateY(-2px);
+	box-shadow: 0 6px 12px rgba(37, 99, 235, 0.3);
+}
+
+button:active:not(:disabled) {
+	transform: translateY(1px) scale(0.98);
+}
+
+button:focus-visible {
+	outline: 2px solid var(--primary-color);
+	outline-offset: 4px;
+	box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.1);
 }
 
 button:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
+	transform: none !important;
+	box-shadow: none !important;
 }
 
 /* Toolbar */
@@ -342,15 +385,15 @@ button:disabled {
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
-	padding: 12px 24px;
+	padding: 16px 24px;
 	background: var(--surface-light);
 	border-top: 1px solid var(--border-color);
-	gap: 12px;
+	gap: 16px;
 	flex-shrink: 0;
 }
 
 .toolbar button {
-	min-width: 100px;
+	min-width: 120px;
 }
 
 /* Layout Helpers */
