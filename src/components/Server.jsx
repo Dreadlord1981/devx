@@ -31,29 +31,28 @@ function Server(props) {
 
 	function updatestatus(o_payload, b_done) {
 
-		let s_result = o_payload.message;
+		const s_message = o_payload.message || "";
 
 		if (o_payload.update) {
-
-			var a_lines = log.split("\n");
-
-			a_lines = a_lines.filter(Boolean)
-
-			if (a_lines[a_lines.length - 1] != "") {
-				a_lines.pop();
-				a_lines.push(o_payload.message);
-			}
-
-			s_result = a_lines.join("\n");
+			setLog(function (s_prev) {
+				const n_count = (s_message.match(/\n/g) || []).length + 1;
+				let n_pos = s_prev.length;
+				for (let i = 0; i < n_count; i++) {
+					const n_next = s_prev.lastIndexOf("\n", n_pos - 1);
+					if (n_next === -1) {
+						n_pos = -1;
+						break;
+					}
+					n_pos = n_next;
+				}
+				return (n_pos === -1 ? "" : s_prev.substring(0, n_pos + 1)) + s_message;
+			});
 		}
 		else {
-			s_result = [
-				log,
-				s_result
-			].join("")
+			setLog(function (s_prev) {
+				return s_prev + s_message;
+			});
 		}
-
-		setLog(s_result);
 
 		if (b_done) {
 			setInternalWorking(false);
