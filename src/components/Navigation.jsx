@@ -1,4 +1,4 @@
-import { useEffect, useId } from "react";
+import { useEffect, useId, useState } from "react";
 import { useNavigate } from "react-router";
 import {
 	Share2,
@@ -14,6 +14,20 @@ import {
 
 function Navigation({ active, working, collapsed, onToggle }) {
 	const history = useNavigate();
+	const [isFullyExpanded, setIsFullyExpanded] = useState(false);
+
+	useEffect(() => {
+		if (collapsed) {
+			setIsFullyExpanded(false);
+		}
+	}, [collapsed]);
+
+	const handleTransitionEnd = (e) => {
+		// Only trigger when the primary sidebar width transition finishes expanding
+		if (e.propertyName === "width" && !collapsed) {
+			setIsFullyExpanded(true);
+		}
+	};
 
 	const links = [
 		{
@@ -133,7 +147,11 @@ function Navigation({ active, working, collapsed, onToggle }) {
 	}, [history]);
 
 	return (
-		<nav className="sidebar" onKeyDown={handleMenuKeyDown}>
+		<nav
+			className={`sidebar ${isFullyExpanded ? "fully-expanded" : ""}`}
+			onKeyDown={handleMenuKeyDown}
+			onTransitionEnd={handleTransitionEnd}
+		>
 			<div
 				className="sidebar-header"
 				onClick={onToggle}
