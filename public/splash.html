@@ -123,6 +123,20 @@
             <div class="loader-bar"></div>
         </div>
         <div class="text">Initializing Developer tools...</div>
-        <div class="version">v0.1.10</div>
+        <div id="version" class="version"></div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", async () => {
+                if (window.__TAURI__) {
+                    try {
+                        const version = await window.__TAURI__.app.getVersion();
+                        document.getElementById("version").textContent =
+                            "v" + version;
+                    } catch (e) {
+                        console.error("Failed to get version:", e);
+                    }
+                }
+            });
+        </script>
     </body>
 </html>
