@@ -142,15 +142,11 @@ function Navigation({ active, working, collapsed, onToggle }) {
 				style={{ cursor: 'pointer' }}
 				title={collapsed ? "Expand" : "Collapse"}
 			>
-				<img src="/assets/logo.png" alt="Logo" style={{ width: '32px', height: '32px', marginRight: collapsed ? '0' : '10px', transition: 'margin 0.3s' }} />
-				{!collapsed && (
-					<>
-						<div className="logo" style={{ flex: 1 }}>DevX</div>
-						<div className="header-toggle">
-							<ChevronLeft size={16} />
-						</div>
-					</>
-				)}
+				<img src="/assets/logo.png" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0, transition: 'margin 0.3s' }} />
+				<div className="logo">DevX</div>
+				<div className="header-toggle">
+					<ChevronLeft size={16} />
+				</div>
 			</div>
 			<ul className="menu" onFocus={handleMenuFocus}>
 				{links.map((link) => {
@@ -165,7 +161,7 @@ function Navigation({ active, working, collapsed, onToggle }) {
 							title={collapsed ? `${link.text} (Alt+${link.key.toUpperCase()})` : ""}
 						>
 							<Icon size={20} className="menu-icon" />
-							{!collapsed && <span className="menu-text">{link.text}</span>}
+							<span className="menu-text">{link.text}</span>
 						</li>
 					);
 				})}
