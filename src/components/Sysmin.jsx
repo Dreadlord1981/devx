@@ -47,8 +47,11 @@ function Sysmin(props) {
 		setInternalWorking(true);
 		setWorking(true);
 
-		let s_list = (state.list || "").split(/\s+/).filter(Boolean).join(" ");
-		let s_boot = (state.boot || "").split(/\s+/).filter(Boolean).join(" ");
+		const current_list = state.system === "i" ? state.i_list : state.p_list;
+		const current_boot = state.system === "p" ? state.p_boot : "";
+
+		let s_list = (current_list || "").split(/\s+/).filter(Boolean).join(" ");
+		let s_boot = (current_boot || "").split(/\s+/).filter(Boolean).join(" ");
 
 		let o_args = {
 			...state,
@@ -128,21 +131,21 @@ function Sysmin(props) {
 									name="boot" 
 									style={{ fontFamily: 'monospace' }}
 									placeholder="Enter boot files separated by spaces or newlines..."
-									value={state.boot}
+									value={state.p_boot}
 									onChange={props.onInputChange}
 								/>
 							</div>
 						</fieldset>
 					)}
 					<fieldset className="fieldset-flex" disabled={internalWorking}>
-						<legend>Files</legend>
+						<legend>Main</legend>
 						<div className="field-wrapper">
 							<textarea 
 								className="field-input" 
 								name="list" 
 								style={{ fontFamily: 'monospace' }}
 								placeholder="Enter files separated by spaces or newlines..."
-								value={state.list}
+								value={state.system === "i" ? state.i_list : state.p_list}
 								onChange={props.onInputChange}
 							/>
 						</div>

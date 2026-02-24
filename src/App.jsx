@@ -100,8 +100,9 @@ function AppContent() {
 
 	let [stateSysmin, setStateSysmin] = useState({
 		system: "i",
-		list: ICECAP_LIST,
-		boot: ""
+		i_list: ICECAP_LIST,
+		p_list: PORTFOLIO_LIST,
+		p_boot: PORTFOLIO_BOOT
 	});
 
 	let [server, setServer] = useState({
@@ -178,16 +179,17 @@ function AppContent() {
 		var i_target = i_event.target;
 		var value = i_target.value;
 		let o_copy = { ...stateSysmin };
-		o_copy[i_target.name] = value;
 
 		if (i_target.name === "system") {
-			if (value === "i") {
-				o_copy.list = ICECAP_LIST;
-				o_copy.boot = "";
-			} else if (value === "p") {
-				o_copy.list = PORTFOLIO_LIST;
-				o_copy.boot = PORTFOLIO_BOOT;
+			o_copy.system = value;
+		} else if (i_target.name === "list") {
+			if (o_copy.system === "i") {
+				o_copy.i_list = value;
+			} else {
+				o_copy.p_list = value;
 			}
+		} else if (i_target.name === "boot") {
+			o_copy.p_boot = value;
 		}
 
 		setStateSysmin(o_copy);

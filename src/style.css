@@ -6,16 +6,16 @@
 }
 
 :root {
-    /* Light Mode - High Clarity */
+    /* Light Mode - Cream & Sand (Warm/Low-Strain) */
     --primary-color: #2563eb;
     --primary-gradient: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    --background-page: #f1f5f9; /* Slightly darker background for the main area */
-    --surface-main: #ffffff;
-    --surface-light: #f8fafc;
-    --border-color: #cbd5e1; /* Stronger borders for better definition */
-    --text-main: #0f172a; /* Darker main text */
-    --text-muted: #475569; /* Darker muted text for readability */
-    --sidebar-bg: #ffffff;
+    --background-page: #e8e4e1; /* Sand-toned background for clearer separation */
+    --surface-main: #fdfbf7; /* Creamy off-white to reduce glare */
+    --surface-light: #f2ede9; /* Warm taupe for active layers */
+    --border-color: #cdc1b3; /* Earthy, well-defined borders */
+    --text-main: #1c1917; /* Sharp, warm black */
+    --text-muted: #57534e; /* Soft brown-gray for secondary text */
+    --sidebar-bg: #fdfbf7;
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
@@ -93,6 +93,10 @@ body {
     margin-bottom: 20px;
 }
 
+.sidebar-header img {
+    pointer-events: none;
+}
+
 .logo {
     font-size: 1.5rem;
     font-weight: 800;
@@ -145,6 +149,10 @@ body {
     outline: 2px solid rgba(255, 255, 255, 0.5);
     outline-offset: -4px;
     background: var(--primary-gradient);
+}
+
+.menu-icon {
+    pointer-events: none;
 }
 
 .menu-item.disabled {
@@ -233,6 +241,7 @@ body {
 .fieldset-flex .field-input {
     flex: 1;
     min-height: 0;
+    resize: none;
 }
 
 .output-area {
