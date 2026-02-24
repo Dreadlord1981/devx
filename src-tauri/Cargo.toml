@@ -1,6 +1,6 @@
 [package]
 name = "devx"
-version = "0.1.9"
+version = "0.1.10"
 description = "Developer toolset for working web development"
 authors = ["Peter Donabed Nøbbe"]
 license = "MIT OR Apache-2.0"
@@ -11,12 +11,12 @@ rust-version = "1.77"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = {version = "1.5.6", features = [] }
+tauri-build = { version = "1.5.6", features = [] }
 
 [dependencies]
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-tauri = {version = "1.6.7", features = [ "window-all", "shell-open"] }
+tauri = { version = "1.6.7", features = ["window-all", "shell-open"] }
 anyhow = "1.0.70"
 shellexpand = "3.1.0"
 sysinfo = "0.35.2"

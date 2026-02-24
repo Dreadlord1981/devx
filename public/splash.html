@@ -1,95 +1,128 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Initializing DevX</title>
-  <style>
-    @font-face {
-      font-family: 'Open Sans';
-      src: url('/assets/fonts/OpenSans-Variable.ttf') format('truetype');
-      font-weight: 300 800;
-      font-style: normal;
-    }
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #0f172a;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      font-family: 'Open Sans', system-ui, -apple-system, sans-serif;
-      overflow: hidden;
-      color: #f1f5f9;
-    }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Initializing DevX</title>
+        <style>
+            @font-face {
+                font-family: "Open Sans";
+                src: url("/assets/fonts/OpenSans-Variable.ttf")
+                    format("truetype");
+                font-weight: 300 800;
+                font-style: normal;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: #0f172a;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                font-family:
+                    "Open Sans",
+                    system-ui,
+                    -apple-system,
+                    sans-serif;
+                overflow: hidden;
+                color: #f1f5f9;
+            }
 
-    .logo-container {
-      position: relative;
-      width: 180px;
-      height: 180px;
-      margin-bottom: 30px;
-      animation: pulse 2s infinite ease-in-out;
-    }
+            .logo-container {
+                position: relative;
+                width: 180px;
+                height: 180px;
+                margin-bottom: 30px;
+                animation: pulse 2s infinite ease-in-out;
+            }
 
-    .logo {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-    }
+            .logo {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
 
-    .loader {
-      width: 240px;
-      height: 4px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 2px;
-      overflow: hidden;
-      position: relative;
-    }
+            .loader {
+                width: 240px;
+                height: 4px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 2px;
+                overflow: hidden;
+                position: relative;
+            }
 
-    .loader-bar {
-      position: absolute;
-      width: 40%;
-      height: 100%;
-      background: linear-gradient(90deg, #2563eb, #3b82f6);
-      border-radius: 2px;
-      animation: loading 1.5s infinite ease-in-out;
-    }
+            .loader-bar {
+                position: absolute;
+                width: 40%;
+                height: 100%;
+                background: linear-gradient(90deg, #2563eb, #3b82f6);
+                border-radius: 2px;
+                animation: loading 1.5s infinite ease-in-out;
+            }
 
-    .text {
-      margin-top: 20px;
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      opacity: 0.8;
-      animation: fadeInOut 2s infinite ease-in-out;
-    }
+            .text {
+                margin-top: 20px;
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                opacity: 0.8;
+                animation: fadeInOut 2s infinite ease-in-out;
+            }
 
-    @keyframes loading {
-      0% { left: -40%; }
-      100% { left: 110%; }
-    }
+            @keyframes loading {
+                0% {
+                    left: -40%;
+                }
+                100% {
+                    left: 110%;
+                }
+            }
 
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3)); }
-      50% { transform: scale(1.03); filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.6)); }
-    }
+            @keyframes pulse {
+                0%,
+                100% {
+                    transform: scale(1);
+                    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+                }
+                50% {
+                    transform: scale(1.03);
+                    filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.6));
+                }
+            }
 
-    @keyframes fadeInOut {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.9; }
-    }
-  </style>
-</head>
-<body>
-  <div class="logo-container">
-    <img src="/assets/logo.png" alt="DevX Logo" class="logo">
-  </div>
-  <div class="loader">
-    <div class="loader-bar"></div>
-  </div>
-  <div class="text">Initializing Developer tools...</div>
-</body>
+            @keyframes fadeInOut {
+                0%,
+                100% {
+                    opacity: 0.4;
+                }
+                50% {
+                    opacity: 0.9;
+                }
+            }
+
+            .version {
+                position: absolute;
+                bottom: 20px;
+                right: 25px;
+                font-size: 11px;
+                font-weight: 600;
+                color: #f1f5f9;
+                opacity: 0.3;
+                letter-spacing: 0.05em;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="logo-container">
+            <img src="/assets/logo.png" alt="DevX Logo" class="logo" />
+        </div>
+        <div class="loader">
+            <div class="loader-bar"></div>
+        </div>
+        <div class="text">Initializing Developer tools...</div>
+        <div class="version">v0.1.10</div>
+    </body>
 </html>
