@@ -72,6 +72,45 @@ function Navigation({ active, working, collapsed, onToggle }) {
 		history(path);
 	}
 
+	function handleMenuKeyDown(e) {
+		if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+		
+		e.preventDefault();
+		const items = Array.from(e.currentTarget.querySelectorAll('.sidebar-header, .menu-item'));
+		const currentIndex = items.indexOf(document.activeElement);
+		
+		let nextIndex;
+		if (e.key === "ArrowDown") {
+			nextIndex = (currentIndex + 1) % items.length;
+		} else {
+			nextIndex = (currentIndex - 1 + items.length) % items.length;
+		}
+		
+		items[nextIndex]?.focus();
+	}
+
+	function handleMenuFocus(e) {
+		const relatedTarget = e.relatedTarget;
+		if (!relatedTarget) return;
+
+		// Check if the focus is entering the menu from outside
+		if (e.currentTarget.contains(relatedTarget)) return;
+
+		// Check if coming from main content but NOT from a toolbar
+		const isFromMain = relatedTarget.closest('main');
+		const isFromToolbar = relatedTarget.closest('.toolbar');
+
+		if (isFromMain && !isFromToolbar) {
+			const selectedItem = e.currentTarget.querySelector('.menu-item.selected');
+			if (selectedItem) {
+				// Use a small timeout to ensure the focus completes before we redirect
+				setTimeout(() => {
+					selectedItem.focus();
+				}, 0);
+			}
+		}
+	}
+
 	function getLinkClass(id) {
 		let classes = ["menu-item"];
 		if (id === active) classes.push("selected");
@@ -94,7 +133,7 @@ function Navigation({ active, working, collapsed, onToggle }) {
 	}, [history]);
 
 	return (
-		<nav className="sidebar">
+		<nav className="sidebar" onKeyDown={handleMenuKeyDown}>
 			<div
 				className="sidebar-header"
 				onClick={onToggle}
@@ -113,7 +152,7 @@ function Navigation({ active, working, collapsed, onToggle }) {
 					</>
 				)}
 			</div>
-			<ul className="menu">
+			<ul className="menu" onFocus={handleMenuFocus}>
 				{links.map((link) => {
 					const Icon = link.icon;
 					return (
