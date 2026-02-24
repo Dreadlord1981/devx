@@ -10,6 +10,7 @@ import Server from "./components/Server";
 import MainLayout from "./components/MainLayout";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow, WebviewWindow, getAll } from "@tauri-apps/api/window";
+import { ICECAP_LIST, PORTFOLIO_BOOT, PORTFOLIO_LIST } from "./defaults";
 
 
 function AppContent() {
@@ -98,7 +99,9 @@ function AppContent() {
 	]);
 
 	let [stateSysmin, setStateSysmin] = useState({
-		system: "i"
+		system: "i",
+		list: ICECAP_LIST,
+		boot: ""
 	});
 
 	let [server, setServer] = useState({
@@ -176,6 +179,17 @@ function AppContent() {
 		var value = i_target.value;
 		let o_copy = { ...stateSysmin };
 		o_copy[i_target.name] = value;
+
+		if (i_target.name === "system") {
+			if (value === "i") {
+				o_copy.list = ICECAP_LIST;
+				o_copy.boot = "";
+			} else if (value === "p") {
+				o_copy.list = PORTFOLIO_LIST;
+				o_copy.boot = PORTFOLIO_BOOT;
+			}
+		}
+
 		setStateSysmin(o_copy);
 	};
 

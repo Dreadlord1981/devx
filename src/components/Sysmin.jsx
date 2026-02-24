@@ -46,8 +46,14 @@ function Sysmin(props) {
 		setLog("")
 		setInternalWorking(true);
 		setWorking(true);
+
+		let s_list = (state.list || "").split(/\s+/).filter(Boolean).join(" ");
+		let s_boot = (state.boot || "").split(/\s+/).filter(Boolean).join(" ");
+
 		let o_args = {
-			...state
+			...state,
+			list: s_list,
+			boot: s_boot
 		};
 		await invoke("sysmin", {
 			args: o_args
@@ -111,6 +117,34 @@ function Sysmin(props) {
 						<div className="field-wrapper">
 							<label className="field-label" htmlFor="system-p">Portfolio:</label>
 							<input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system" checked={state.system === "p"}></input>
+						</div>
+					</fieldset>
+					{state.system === "p" && (
+						<fieldset className="fieldset-flex" disabled={internalWorking}>
+							<legend>Boot</legend>
+							<div className="field-wrapper">
+								<textarea 
+									className="field-input" 
+									name="boot" 
+									style={{ fontFamily: 'monospace' }}
+									placeholder="Enter boot files separated by spaces or newlines..."
+									value={state.boot}
+									onChange={props.onInputChange}
+								/>
+							</div>
+						</fieldset>
+					)}
+					<fieldset className="fieldset-flex" disabled={internalWorking}>
+						<legend>Files</legend>
+						<div className="field-wrapper">
+							<textarea 
+								className="field-input" 
+								name="list" 
+								style={{ fontFamily: 'monospace' }}
+								placeholder="Enter files separated by spaces or newlines..."
+								value={state.list}
+								onChange={props.onInputChange}
+							/>
 						</div>
 					</fieldset>
 				</div>
