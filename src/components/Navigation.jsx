@@ -142,7 +142,9 @@ function Navigation({ active, working, collapsed, onToggle }) {
 				style={{ cursor: 'pointer' }}
 				title={collapsed ? "Expand" : "Collapse"}
 			>
-				<img src="/assets/logo.png" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0, transition: 'margin 0.3s' }} />
+				<div className="icon-box">
+					<img src="/assets/logo.png" alt="Logo" style={{ width: '32px', height: '32px', flexShrink: 0 }} />
+				</div>
 				<div className="logo">DevX</div>
 				<div className="header-toggle">
 					<ChevronLeft size={16} />
@@ -160,7 +162,9 @@ function Navigation({ active, working, collapsed, onToggle }) {
 							tabIndex="0"
 							title={collapsed ? `${link.text} (Alt+${link.key.toUpperCase()})` : ""}
 						>
-							<Icon size={20} className="menu-icon" />
+							<div className="icon-box">
+								<Icon size={20} className="menu-icon" />
+							</div>
 							<span className="menu-text">{link.text}</span>
 						</li>
 					);
