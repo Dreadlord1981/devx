@@ -1,6 +1,6 @@
 [package]
 name = "devx"
-version = "0.1.10"
+version = "0.1.11"
 description = "Developer toolset for working web development"
 authors = ["Peter Donabed Nøbbe"]
 license = "MIT OR Apache-2.0"

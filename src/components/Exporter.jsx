@@ -15,9 +15,18 @@ function Exporter(props) {
 
 	const logRef = useRef(null);
 	const inputRef = useRef(null);
+	const liveStatusRef = useRef({
+		index: -1,
+		resolved: false
+	});
 
 	const [internalWorking, setInternalWorking] = useState(false);
 	const [log, setLog] = useState("");
+
+	function splitMessageParts(s_value) {
+
+		return s_value.match(/[^\n]+|\n/g) || [];
+	}
 
 	function isSelected(s_value) {
 
@@ -40,29 +49,48 @@ function Exporter(props) {
 	function updatestatus(o_payload, b_done) {
 
 		const s_message = o_payload.message || "";
+		const a_messageParts = splitMessageParts(s_message);
 
 		if (o_payload.update) {
 			setLog(function (s_prev) {
-				const n_count = (s_message.match(/\n/g) || []).length + 1;
-				let n_pos = s_prev.length;
-				for (let i = 0; i < n_count; i++) {
-					const n_next = s_prev.lastIndexOf("\n", n_pos - 1);
-					if (n_next === -1) {
-						n_pos = -1;
-						break;
-					}
-					n_pos = n_next;
-				}
-				return (n_pos === -1 ? "" : s_prev.substring(0, n_pos + 1)) + s_message;
+
+				const a_prevParts = splitMessageParts(s_prev);
+				const n_startIndex = liveStatusRef.current.resolved
+					? liveStatusRef.current.index
+					: liveStatusRef.current.index - 1;
+				
+				let a_nextParts = [...a_prevParts.slice(0, n_startIndex)];
+				a_nextParts.push(...a_messageParts);
+
+				liveStatusRef.current = {
+					index: n_startIndex,
+					resolved: true
+				};
+
+				return a_nextParts.join("");
 			});
 		}
 		else {
 			setLog(function (s_prev) {
+
+				const a_prevParts = splitMessageParts(s_prev);
+
+				const n_startIndex = a_prevParts.length - 1;
+
+				liveStatusRef.current = {
+					index: n_startIndex,
+					resolved: false
+				};
+
 				return s_prev + s_message;
 			});
 		}
 
 		if (b_done) {
+			liveStatusRef.current = {
+				index: -1,
+				resolved: false
+			};
 			setInternalWorking(false);
 			setWorking(false);
 		}
@@ -100,6 +128,10 @@ function Exporter(props) {
 	async function onClick() {
 
 		setLog("");
+		liveStatusRef.current = {
+			index: -1,
+			resolved: false
+		};
 		setInternalWorking(true);
 		setWorking(true);
 
@@ -115,6 +147,10 @@ function Exporter(props) {
 	async function onClearClick() {
 
 		setLog("");
+		liveStatusRef.current = {
+			index: -1,
+			resolved: false
+		};
 	}
 
 	useEffect(function () {
@@ -147,17 +183,6 @@ function Exporter(props) {
 		});
 
 
-		if (first) {
-			f_first();
-		}
-
-		if (logRef.current) {
-			const scrollHeight = logRef.current.scrollHeight;
-			const height = logRef.current.clientHeight;
-			const maxScrollTop = scrollHeight - height;
-			logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
-		}
-
 		return () => {
 			status.then(function (f_callback) {
 				f_callback();
@@ -171,7 +196,21 @@ function Exporter(props) {
 				f_callback();
 			});
 		}
-	}, [log])
+	}, [])
+
+	useEffect(function () {
+
+		if (first) {
+			f_first();
+		}
+
+		if (logRef.current) {
+			const scrollHeight = logRef.current.scrollHeight;
+			const height = logRef.current.clientHeight;
+			const maxScrollTop = scrollHeight - height;
+			logRef.current.scrollTop = maxScrollTop > 0 ? maxScrollTop : 0;
+		}
+	}, [first, f_first, log])
 
 	return (
 		<div className="container">
