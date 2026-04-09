@@ -55,42 +55,29 @@ function Exporter(props) {
 			setLog(function (s_prev) {
 
 				const a_prevParts = splitMessageParts(s_prev);
-				const n_startIndex = liveStatusRef.current.resolved
-					? liveStatusRef.current.index
-					: liveStatusRef.current.index - 1;
+				let n_startIndex = -1;
+				
+				a_prevParts.find(function(s_line, n_index) {
+
+					if (s_line.includes("Deploying")) {
+						n_startIndex = n_index;
+					}
+				}); 
+
 				
 				let a_nextParts = [...a_prevParts.slice(0, n_startIndex)];
 				a_nextParts.push(...a_messageParts);
-
-				liveStatusRef.current = {
-					index: n_startIndex,
-					resolved: true
-				};
 
 				return a_nextParts.join("");
 			});
 		}
 		else {
 			setLog(function (s_prev) {
-
-				const a_prevParts = splitMessageParts(s_prev);
-
-				const n_startIndex = a_prevParts.length - 1;
-
-				liveStatusRef.current = {
-					index: n_startIndex,
-					resolved: false
-				};
-
 				return s_prev + s_message;
 			});
 		}
 
 		if (b_done) {
-			liveStatusRef.current = {
-				index: -1,
-				resolved: false
-			};
 			setInternalWorking(false);
 			setWorking(false);
 		}
