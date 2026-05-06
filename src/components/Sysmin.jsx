@@ -153,7 +153,7 @@ function Sysmin(props) {
 									onClick={onSaveLists}
 									aria-label={`Save ${state.system === "i" ? "Icecap" : "Portfolio"} list${state.system === "p" ? "s" : ""}`}
 								>
-									<Save size={14} />
+									<Save size={16} />
 								</button>
 							</div>
 						</div>
