@@ -208,9 +208,9 @@ function AppContent() {
 	async function saveSysminLists() {
 		await invoke("save_sysmin_lists", {
 			system: stateSysmin.system,
-			i_list: stateSysmin.i_list,
-			p_list: stateSysmin.p_list,
-			p_boot: stateSysmin.p_boot
+			iList: stateSysmin.i_list,
+			pList: stateSysmin.p_list,
+			pBoot: stateSysmin.p_boot
 		});
 	}
 
