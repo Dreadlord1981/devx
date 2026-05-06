@@ -58,6 +58,8 @@ fn main() {
 				package,
 				create_theme,
 				sysmin,
+				get_sysmin_lists,
+				save_sysmin_lists,
 				get_server_list,
 				get_server_configs,
 				run_server

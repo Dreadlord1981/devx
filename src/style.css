@@ -356,6 +356,75 @@ body {
     resize: none;
 }
 
+.sysmin-save-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.sysmin-save-tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%) translateY(4px);
+    padding: 6px 8px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-light);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+    font-size: 11px;
+    line-height: 1;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+    z-index: 10;
+}
+
+.sysmin-save-tooltip:hover::after,
+.sysmin-save-tooltip:focus-within::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.sysmin-save-icon {
+    width: 16px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.sysmin-save-icon:hover:not(:disabled) {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    transform: none;
+    color: var(--primary-color);
+}
+
+.sysmin-save-icon:active:not(:disabled) {
+    transform: none;
+}
+
+.sysmin-save-icon:focus-visible {
+    outline-offset: 2px;
+    box-shadow: none;
+}
+
+.sysmin-status {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    word-break: break-word;
+}
+
 .output-area {
     flex: 1;
     background: var(--surface-main);

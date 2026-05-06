@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow } from "@tauri-apps/api/window";
+import { Save } from "lucide-react";
 import Toolbar from "./Toolbar";
 
 function Sysmin(props) {
@@ -10,7 +11,9 @@ function Sysmin(props) {
 
 	const logRef = useRef(null);
 	const [internalWorking, setInternalWorking] = useState(false);
+	const [listWorking, setListWorking] = useState(false);
 	const [log, setLog] = useState("");
+	const [listStatus, setListStatus] = useState("");
 
 	function updatestatus(o_payload, b_done) {
 
@@ -67,6 +70,22 @@ function Sysmin(props) {
 		setLog("");
 	}
 
+	async function onSaveLists() {
+		setListWorking(true);
+		setListStatus("");
+
+		try {
+			await props.onSaveLists();
+			setListStatus("Lists saved.");
+		}
+		catch (error) {
+			setListStatus(`Could not save list files: ${String(error)}`);
+		}
+		finally {
+			setListWorking(false);
+		}
+	}
+
 	useEffect(function () {
 
 		invoke("update_title", { title: "System minifier" });
@@ -111,7 +130,7 @@ function Sysmin(props) {
 		<div className="container">
 			<div className="content-wrapper">
 				<div className="form-area">
-					<fieldset disabled={internalWorking}>
+					<fieldset disabled={internalWorking || listWorking}>
 						<legend>System</legend>
 						<div className="field-wrapper">
 							<label className="field-label" htmlFor="system-i">Icecap:</label>
@@ -121,30 +140,50 @@ function Sysmin(props) {
 							<label className="field-label" htmlFor="system-p">Portfolio:</label>
 							<input type="radio" className="field-input" onChange={props.onInputChange} id="system-p" value="p" name="system" checked={state.system === "p"}></input>
 						</div>
+						<div className="field-wrapper">
+							<label className="field-label" htmlFor="system-save">Save:</label>
+							<div
+								className="sysmin-save-tooltip"
+								data-tooltip={`Save ${state.system === "i" ? "Icecap" : "Portfolio"} list${state.system === "p" ? "s" : ""}`}
+							>
+								<button
+									id="system-save"
+									type="button"
+									className="sysmin-save-icon"
+									onClick={onSaveLists}
+									aria-label={`Save ${state.system === "i" ? "Icecap" : "Portfolio"} list${state.system === "p" ? "s" : ""}`}
+								>
+									<Save size={14} />
+								</button>
+							</div>
+						</div>
+						{listStatus && (
+							<div className="sysmin-status">{listStatus}</div>
+						)}
 					</fieldset>
 					{state.system === "p" && (
-						<fieldset className="fieldset-flex" disabled={internalWorking}>
+						<fieldset className="fieldset-flex" disabled={internalWorking || listWorking}>
 							<legend>Boot</legend>
 							<div className="field-wrapper">
 								<textarea 
 									className="field-input" 
 									name="boot" 
 									style={{ fontFamily: 'monospace' }}
-									placeholder="Enter boot files separated by spaces or newlines..."
+									placeholder="Enter one boot file per line. Saved on disk as a JSON array."
 									value={state.p_boot}
 									onChange={props.onInputChange}
 								/>
 							</div>
 						</fieldset>
 					)}
-					<fieldset className="fieldset-flex" disabled={internalWorking}>
+					<fieldset className="fieldset-flex" disabled={internalWorking || listWorking}>
 						<legend>Main</legend>
 						<div className="field-wrapper">
 							<textarea 
 								className="field-input" 
 								name="list" 
 								style={{ fontFamily: 'monospace' }}
-								placeholder="Enter files separated by spaces or newlines..."
+								placeholder="Enter one file per line. Saved on disk as a JSON array."
 								value={state.system === "i" ? state.i_list : state.p_list}
 								onChange={props.onInputChange}
 							/>
@@ -158,7 +197,7 @@ function Sysmin(props) {
 					</div>
 				</div>
 			</div>
-			<Toolbar onClearClick={onClearClick} onClick={onClick} valid={!internalWorking} />
+			<Toolbar onClearClick={onClearClick} onClick={onClick} valid={!internalWorking && !listWorking} />
 		</div>
 	);
 }

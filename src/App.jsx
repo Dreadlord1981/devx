@@ -10,7 +10,6 @@ import Server from "./components/Server";
 import MainLayout from "./components/MainLayout";
 import { invoke } from "@tauri-apps/api/tauri";
 import { appWindow, WebviewWindow, getAll } from "@tauri-apps/api/window";
-import { ICECAP_LIST, PORTFOLIO_BOOT, PORTFOLIO_LIST } from "./defaults";
 
 
 function AppContent() {
@@ -100,9 +99,9 @@ function AppContent() {
 
 	let [stateSysmin, setStateSysmin] = useState({
 		system: "i",
-		i_list: ICECAP_LIST,
-		p_list: PORTFOLIO_LIST,
-		p_boot: PORTFOLIO_BOOT
+		i_list: "",
+		p_list: "",
+		p_boot: ""
 	});
 
 	let [server, setServer] = useState({
@@ -194,6 +193,26 @@ function AppContent() {
 
 		setStateSysmin(o_copy);
 	};
+
+	async function loadSysminLists() {
+		let lists = await invoke("get_sysmin_lists");
+		setStateSysmin(function (prev) {
+			return {
+				...prev,
+				...lists
+			};
+		});
+		return lists;
+	}
+
+	async function saveSysminLists() {
+		await invoke("save_sysmin_lists", {
+			system: stateSysmin.system,
+			i_list: stateSysmin.i_list,
+			p_list: stateSysmin.p_list,
+			p_boot: stateSysmin.p_boot
+		});
+	}
 
 	function onCreatorExtendCheckChange(i_event) {
 		var i_target = i_event.target;
@@ -364,6 +383,12 @@ function AppContent() {
 	};
 
 	useEffect(() => {
+		loadSysminLists().catch(function (error) {
+			console.error("Could not load sysmin lists", error);
+		});
+	}, []);
+
+	useEffect(() => {
 		// Close splashscreen and show main window
 		const timer = setTimeout(async () => {
 			try {
@@ -391,7 +416,7 @@ function AppContent() {
 				<Route path="/creator" element={<Creator state={creator} onInputChange={onCreatorInputChange} onExtendChange={onCreatorExtendCheckChange} getProjectConfig={getProjectConfig} onProjectChange={onCreatorProjectCheckChange} onOptionChange={onCreatorOptionChange} setWorking={setWorking} />} />
 				<Route path="/builder" element={<Builder state={builder} onInputChange={onBuilderInputChange} options={buildOptions} setWorking={setWorking} />} />
 				<Route path="/package" element={<Package state={statePackage} onInputChange={onPackageInputChange} setWorking={setWorking} />} />
-				<Route path="/sysmin" element={<Sysmin state={stateSysmin} onInputChange={onSysminInputChange} setWorking={setWorking} />} />
+				<Route path="/sysmin" element={<Sysmin state={stateSysmin} onInputChange={onSysminInputChange} onSaveLists={saveSysminLists} setWorking={setWorking} />} />
 				<Route path="/server" element={<Server state={server} onInputChange={onServerPathChange} onServerChange={onServerChange} onConfigChange={onConfigChange} onServerCacheChange={onServerCacheChange} setWorking={setWorking} />} />
 			</Routes>
 		</MainLayout>

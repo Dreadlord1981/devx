@@ -1,9 +1,102 @@
-use std::{fs::{self, OpenOptions}, io::Read, path::PathBuf};
+use std::{fs::{self, OpenOptions}, io::Read, path::{Path, PathBuf}};
 
 use serde_json::Value;
-use tauri::{Runtime, Window};
+use tauri::{AppHandle, Runtime, Window};
 
-use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ServerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload, ServerPackage}};
+use crate::{args::{run, ExportArgs, IcecBuilderArgs, PackageBuilderArgs, PackerArgs, ServerArgs, SysminArgs, ThemeArgs}, message::{Package, Payload, ServerPackage, SysminLists}};
+
+const SYSMIN_CONFIG_DIR: &str = "sysmin";
+const ICECAP_LIST_FILE: &str = "icecap-list.json";
+const PORTFOLIO_LIST_FILE: &str = "portfolio-list.json";
+const PORTFOLIO_BOOT_FILE: &str = "portfolio-boot.json";
+const ICECAP_LIST_RESOURCE: &str = "resources/sysmin/icecap-list.json";
+const PORTFOLIO_LIST_RESOURCE: &str = "resources/sysmin/portfolio-list.json";
+const PORTFOLIO_BOOT_RESOURCE: &str = "resources/sysmin/portfolio-boot.json";
+
+fn get_sysmin_directory() -> Result<PathBuf, String> {
+	let config_dir = dirs::config_dir()
+		.ok_or_else(|| String::from("Could not resolve a configuration directory for sysmin list files."))?;
+
+	Ok(config_dir.join("devx").join(SYSMIN_CONFIG_DIR))
+}
+
+fn read_bundled_sysmin_file<R: Runtime>(app: &AppHandle<R>, resource: &str) -> Result<String, String> {
+	let resource_path = app
+		.path_resolver()
+		.resolve_resource(resource)
+		.ok_or_else(|| format!("Could not find bundled sysmin resource: {resource}"))?;
+
+	fs::read_to_string(&resource_path)
+		.map_err(|error| format!("Could not read bundled sysmin resource {}: {}", resource_path.display(), error))
+}
+
+fn ensure_sysmin_file<R: Runtime>(
+	app: &AppHandle<R>,
+	config_dir: &Path,
+	file_name: &str,
+	resource: &str
+) -> Result<String, String> {
+	let file_path = config_dir.join(file_name);
+
+	if !file_path.exists() {
+		let bundled_contents = read_bundled_sysmin_file(app, resource)?;
+		fs::write(&file_path, &bundled_contents)
+			.map_err(|error| format!("Could not create sysmin file {}: {}", file_path.display(), error))?;
+		return Ok(bundled_contents);
+	}
+
+	fs::read_to_string(&file_path)
+		.map_err(|error| format!("Could not read sysmin file {}: {}", file_path.display(), error))
+}
+
+fn parse_sysmin_entries(contents: &str, label: &str) -> Result<Vec<String>, String> {
+	let values: Vec<String> = serde_json::from_str(contents)
+		.map_err(|error| format!("Could not parse {} as a JSON string array: {}", label, error))?;
+
+	Ok(values
+		.into_iter()
+		.map(|value| value.trim().to_string())
+		.filter(|value| !value.is_empty())
+		.collect())
+}
+
+fn entries_to_editor_text(contents: &str, label: &str) -> Result<String, String> {
+	Ok(parse_sysmin_entries(contents, label)?.join("\n"))
+}
+
+fn editor_text_to_json(contents: &str) -> Result<String, String> {
+	let entries: Vec<String> = contents
+		.lines()
+		.map(str::trim)
+		.filter(|value| !value.is_empty())
+		.map(String::from)
+		.collect();
+
+	serde_json::to_string_pretty(&entries)
+		.map(|json| format!("{json}\n"))
+		.map_err(|error| format!("Could not serialize sysmin entries to JSON: {}", error))
+}
+
+fn load_sysmin_lists<R: Runtime>(app: &AppHandle<R>) -> Result<SysminLists, String> {
+	let config_dir = get_sysmin_directory()?;
+	fs::create_dir_all(&config_dir)
+		.map_err(|error| format!("Could not create sysmin config directory {}: {}", config_dir.display(), error))?;
+
+	Ok(SysminLists {
+		i_list: entries_to_editor_text(
+			&ensure_sysmin_file(app, &config_dir, ICECAP_LIST_FILE, ICECAP_LIST_RESOURCE)?,
+			ICECAP_LIST_FILE
+		)?,
+		p_list: entries_to_editor_text(
+			&ensure_sysmin_file(app, &config_dir, PORTFOLIO_LIST_FILE, PORTFOLIO_LIST_RESOURCE)?,
+			PORTFOLIO_LIST_FILE
+		)?,
+		p_boot: entries_to_editor_text(
+			&ensure_sysmin_file(app, &config_dir, PORTFOLIO_BOOT_FILE, PORTFOLIO_BOOT_RESOURCE)?,
+			PORTFOLIO_BOOT_FILE
+		)?
+	})
+}
 
 #[tauri::command]
 pub async fn packer(
@@ -208,6 +301,45 @@ pub async fn sysmin(
         error: false,
         message: "Done".to_string()
     }).unwrap();
+}
+
+#[tauri::command]
+pub async fn get_sysmin_lists<R: Runtime>(
+	app: tauri::AppHandle<R>
+) -> Result<SysminLists, String> {
+	load_sysmin_lists(&app)
+}
+
+#[tauri::command]
+pub async fn save_sysmin_lists<R: Runtime>(
+	_app: tauri::AppHandle<R>,
+	system: String,
+	i_list: String,
+	p_list: String,
+	p_boot: String
+) -> Result<(), String> {
+	let config_dir = get_sysmin_directory()?;
+	fs::create_dir_all(&config_dir)
+		.map_err(|error| format!("Could not create sysmin config directory {}: {}", config_dir.display(), error))?;
+
+	let targets = if system == "i" {
+		vec![
+			(ICECAP_LIST_FILE, editor_text_to_json(&i_list)?)
+		]
+	} else {
+		vec![
+			(PORTFOLIO_LIST_FILE, editor_text_to_json(&p_list)?),
+			(PORTFOLIO_BOOT_FILE, editor_text_to_json(&p_boot)?)
+		]
+	};
+
+	for (file_name, contents) in targets {
+		let target_path = config_dir.join(file_name);
+		fs::write(&target_path, contents)
+			.map_err(|error| format!("Could not save sysmin file {}: {}", target_path.display(), error))?;
+	}
+
+	Ok(())
 }
 
 #[tauri::command]

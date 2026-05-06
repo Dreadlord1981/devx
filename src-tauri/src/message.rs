@@ -18,3 +18,10 @@ pub struct ServerPackage {
 	pub port: i32,
 	pub https: bool
 }
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct SysminLists {
+	pub i_list: String,
+	pub p_list: String,
+	pub p_boot: String
+}

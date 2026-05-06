@@ -45,7 +45,8 @@
         "signingIdentity": null
       },
       "resources": [
-		"bin/*"
+		"bin/*",
+		"resources/sysmin/*"
 	  ],
       "shortDescription": "",
       "targets": [
